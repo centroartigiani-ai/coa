@@ -1,0 +1,155 @@
+{
+  "project_name": "Centrale Operativa Artigiani (COA)",
+  "theme": "Tema scuro moderno",
+  "typography": {
+    "headings": {
+      "fontFamily": "Cabinet Grotesk, Outfit, or Space Grotesk (sans-serif)",
+      "weights": ["300", "500", "800", "900"],
+      "tracking": "tracking-tight to tracking-tighter",
+      "instruction": "DO NOT use Inter, Roboto, or Lato for headings. Use an industrial, wide, high-impact font like Cabinet Grotesk or Outfit."
+    },
+    "body": {
+      "fontFamily": "Satoshi, DM Sans, or IBM Plex Sans",
+      "weights": ["400", "500"],
+      "tracking": "normal",
+      "instruction": "Clean, highly readable font for forms, body text, and dashboard data."
+    },
+    "hierarchy": {
+      "h1": "text-5xl md:text-6xl lg:text-7xl font-black uppercase tracking-tighter leading-[0.9]",
+      "h2": "text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base md:text-lg text-white/70",
+      "overline": "text-xs font-bold tracking-[0.2em] uppercase text-[#FF5A00]"
+    }
+  },
+  "colors": {
+    "background": {
+      "primary": "#0A0A0A",
+      "secondary": "#111111",
+      "tertiary": "#1A1A1A"
+    },
+    "surface": {
+      "card": "#121212",
+      "glass": "bg-black/60 backdrop-blur-xl border border-white/10"
+    },
+    "accents": {
+      "primary": "#FF5A00",
+      "primary_hover": "#E04F00",
+      "secondary": "#2A2A2A"
+    },
+    "text": {
+      "primary": "#FFFFFF",
+      "secondary": "#A1A1AA",
+      "muted": "#52525B",
+      "inverse": "#000000"
+    },
+    "border": {
+      "default": "rgba(255,255,255,0.1)",
+      "focus": "#FF5A00"
+    }
+  },
+  "layouts": {
+    "hero": {
+      "style": "Kinetic, large typography, masked line-by-line reveal.",
+      "background": "Dark overlay (bg-black/50) over an industrial background image or subtle noise.",
+      "structure": "Grid cols-1 md:grid-cols-12, text spans 8 cols."
+    },
+    "bento_grid": {
+      "instruction": "For 'Servizi' and 'Come funziona', use Tetris Bento grid logic. Never fill 100% symmetrically.",
+      "gap": "gap-4 md:gap-8",
+      "example_spans": "col-span-full md:col-span-8 row-span-2, col-span-4 row-span-1"
+    },
+    "dashboard_grid": {
+      "instruction": "High Density Grid for the admin panel. Strict grid hierarchy, tight gaps (gap-4 or gap-6). Use Shadcn tables for submissions.",
+      "style": "Flat cards, 1px borders, dense data presentation."
+    },
+    "spacing": {
+      "section_padding": "py-24 md:py-32",
+      "container": "px-6 md:px-12 mx-auto max-w-7xl"
+    }
+  },
+  "motion": {
+    "scrolling": "Lenis smooth scrolling is MANDATORY. Wrap the app in a Lenis provider.",
+    "hero_reveal": "Framer motion line-by-line reveal. Split text into lines, overflow-hidden, y: '100%' to y: 0 with stagger.",
+    "scroll_reveals": "Framer motion whileInView={ y: 0, opacity: 1 }, initial={ y: 40, opacity: 0 }, viewport={ once: true, margin: '-100px' }",
+    "marquee": "Use react-fast-marquee for an endless scrolling ribbon of 'Aree Coperte'. Style: huge outline text or small editorial ribbon.",
+    "micro_interactions": "Hover states on cards: subtle scale up (scale: 1.02), border changes from white/10 to white/30."
+  },
+  "visual_enhancers": {
+    "textures": "Add a subtle SVG noise/grain fixed overlay to the entire body (pointer-events-none, opacity-20) to kill the digital flatness.",
+    "borders": "Expose the skeleton. Use 1px borders (border-white/10) on cards. Sharp corners or extremely subtle rounding (rounded-none or rounded-sm max).",
+    "glassmorphism": "Use for the sticky header and admin dashboard sidebar. bg-black/60, backdrop-blur-xl, border-b border-white/10."
+  },
+  "components": {
+    "forms": {
+      "style": "Shadcn UI base but stripped of the Vercel look. Inputs must have bg-transparent, border-b border-white/20 ONLY (no full borders), rounded-none, text-white, focus:border-[#FF5A00] focus:ring-0. Architectural, brutalist feel.",
+      "labels": "text-xs tracking-widest uppercase text-white/60 mb-2 block"
+    },
+    "buttons": {
+      "primary": "bg-[#FF5A00] text-white rounded-none px-8 py-4 font-medium hover:bg-[#E04F00] transition-colors relative overflow-hidden group",
+      "secondary": "bg-transparent border border-white/20 text-white rounded-none px-8 py-4 font-medium hover:border-white transition-colors"
+    },
+    "cards": {
+      "style": "Flat, sharp edges, bg-[#111] border border-white/10. Inner padding p-8. Used for Servizi and Come Funziona."
+    },
+    "accordion": {
+      "style": "For FAQ. Shadcn Accordion. border-b border-white/10. Large text for triggers (text-xl sm:text-2xl font-light)."
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure white text on #0A0A0A meets APCA/WCAG standards. Use white/70 for body text to reduce eye strain, but keep headings pure white.",
+    "focus": "All interactive elements must have focus-visible ring (ring-[#FF5A00]).",
+    "testing": "All interactive and key informational elements MUST include a data-testid attribute in kebab-case."
+  },
+  "media": {
+    "images": "Use high-contrast, moody industrial shots. Limit opacity with bg-black/50 to ensure text readability.",
+    "icons": "Use lucide-react. Stroke width 1.5 for a sharp, technical look."
+  },
+  "3d_libraries": {
+    "parallax": "Use Framer Motion's useScroll and useTransform for a subtle parallax on the Hero background image. Do not overcomplicate with WebGL unless strictly needed for the '3D moment'. A highly polished parallax with Framer Motion fits the Awwwards brief best."
+  },
+  "image_urls": {
+    "hero": {
+      "url": "https://images.pexels.com/photos/1555177/pexels-photo-1555177.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Welding sparks night - Use with heavy bg-black/50 overlay as the hero background to set a high-end, dramatic, industrial tone."
+    },
+    "services_electrical": {
+      "url": "https://images.pexels.com/photos/9679179/pexels-photo-9679179.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Technician working on circuit breaker. Use in the 'Elettricista' service card or 'Come lavoriamo'."
+    },
+    "partner_section": {
+      "url": "https://images.unsplash.com/photo-1542621334-a254cf47733d",
+      "description": "Blueprint with pencil. Use for the 'Diventa Partner' call to action background or beside the form."
+    }
+  },
+  "instructions_to_main_agent": [
+    "You are building Centrale Operativa Artigiani (COA), an Awwwards-level landing page.",
+    "MUST use pure HTML + Tailwind for structural layouts to achieve overlapping and asymmetry. DO NOT use Shadcn 'Card' wrapper for main layout grids, build them manually.",
+    "MUST use Shadcn UI strictly for logic-heavy components: Forms, Inputs, Select, Accordion (FAQ), and the Admin Dashboard data tables.",
+    "Inject a global noise texture overlay to break digital flatness.",
+    "DO NOT center-align paragraphs. Use left-alignment with generous max-widths for readability.",
+    "Implement Lenis for smooth scrolling in the main layout wrapper.",
+    "Implement Framer Motion for the Hero text reveal (kinetic, masked lines) and scroll reveals (fade up).",
+    "Include a Marquee (using react-fast-marquee) for the 'Aree Coperte' section.",
+    "For the 9 'Servizi' cards, use an asymmetric CSS Grid (e.g., md:grid-cols-3 with some items spanning 2 rows or 2 columns) rather than a uniform 3x3 grid.",
+    "Forms must have photo/file upload fields as requested. Style inputs aggressively minimal (border bottom only, no background, uppercase labels)."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "You tend to converge toward generic, 'on distribution' outputs. Avoid this: make creative, distinctive frontends that surprise and delight.",
+    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
+    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur).",
+    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements.",
+    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file.",
+    "Always use modern button styles like sharp architectural buttons with interaction animations & color relevant to the app style.",
+    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯 etc for icons.",
+    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations.",
+    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Use sonner for toasts, located in /app/src/components/ui/sonner.jsx.",
+    "CRITICAL: DO NOT use complete transparent background in header, overlays, any surface that has content under it. Example: Dropdown with transparent background"
+  ]
+}
