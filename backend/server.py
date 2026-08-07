@@ -151,7 +151,7 @@ def build_email_html(title: str, fields: list) -> str:
             f'{rows}</table>')
 
 
-async def notify_admin(subject: str, html: str):
+async def notify_admin(subject: str, html: str, attachment: dict | None = None):
     api_key = os.environ.get("RESEND_API_KEY")
     if not api_key or resend is None:
         logger.warning("RESEND_API_KEY non configurata: notifica email saltata (%s)", subject)
@@ -164,6 +164,8 @@ async def notify_admin(subject: str, html: str):
             "subject": subject,
             "html": html,
         }
+        if attachment:
+            params["attachments"] = [{"filename": attachment["filename"], "content": attachment["data"]}]
         result = await asyncio.to_thread(resend.Emails.send, params)
         logger.info("Email inviata: %s (id: %s)", subject, result.get("id"))
     except Exception as e:
@@ -202,7 +204,7 @@ async def create_request(
         ("Comune", comune), ("Indirizzo", indirizzo), ("Tipo", tipo_intervento),
         ("Urgente", "Sì" if doc["urgente"] else "No"), ("Descrizione", descrizione),
     ])
-    await notify_admin(f"[COA] Nuova richiesta: {tipo_intervento}", html)
+    await notify_admin(f"[COA] Nuova richiesta: {tipo_intervento}", html, doc["photo"])
     return {"id": doc["id"], "message": "Richiesta ricevuta"}
 
 
@@ -230,7 +232,7 @@ async def create_partner(
         ("Professione", professione), ("Zone", zone_coperte),
         ("Esperienza", anni_esperienza), ("Messaggio", messaggio),
     ])
-    await notify_admin(f"[COA] Nuova candidatura partner: {nome} {cognome}", html)
+    await notify_admin(f"[COA] Nuova candidatura partner: {nome} {cognome}", html, doc["attachment"])
     return {"id": doc["id"], "message": "Candidatura ricevuta"}
 
 
