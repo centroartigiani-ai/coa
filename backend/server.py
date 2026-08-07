@@ -183,7 +183,7 @@ async def read_upload(file):
 @api_router.post("/requests")
 async def create_request(
     nome: str = Form(...), cognome: str = Form(...), telefono: str = Form(...), email: str = Form(...),
-    indirizzo: str = Form(""), tipo_intervento: str = Form(...),
+    indirizzo: str = Form(...), tipo_intervento: str = Form(...),
     descrizione: str = Form(...), urgente: str = Form("no"), comune: str = Form(""), photo: UploadFile | None = File(None),
 ):
     doc = {

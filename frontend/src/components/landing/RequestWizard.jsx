@@ -26,7 +26,7 @@ export default function RequestWizard({ open, onOpenChange }) {
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const validStep = () => {
-    if (step === 0) return form.nome.trim() && form.cognome.trim() && form.telefono.trim() && /.+@.+\..+/.test(form.email);
+    if (step === 0) return form.nome.trim() && form.cognome.trim() && form.telefono.trim() && /.+@.+\..+/.test(form.email) && form.indirizzo.trim();
     if (step === 1) return form.tipo_intervento && form.descrizione.trim();
     return true;
   };
@@ -130,7 +130,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                         <input id="req-email" data-testid="request-email-input" type="email" inputMode="email" autoComplete="email" value={form.email} onChange={set("email")} className="brutalist-input" placeholder="mario@email.it" />
                       </div>
                       <div className="sm:col-span-2">
-                        <label className="brutalist-label" htmlFor="req-indirizzo">Indirizzo (opzionale)</label>
+                        <label className="brutalist-label" htmlFor="req-indirizzo">Indirizzo *</label>
                         <input id="req-indirizzo" data-testid="request-indirizzo-input" autoComplete="street-address" value={form.indirizzo} onChange={set("indirizzo")} className="brutalist-input" placeholder="Via Roma 1, Varese" />
                       </div>
                     </div>
@@ -192,6 +192,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                           ["Nome", `${form.nome} ${form.cognome}`],
                           ["Telefono", form.telefono],
                           ["Email", form.email],
+                          ["Indirizzo", form.indirizzo],
                           ["Intervento", form.tipo_intervento],
                           ["Urgente", form.urgente === "si" ? "Sì" : "No"],
                           ["Problema", form.descrizione],
