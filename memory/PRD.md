@@ -28,9 +28,10 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 - Admin: login (/admin/login), dashboard con statistiche, tab Richieste/Partner, cambio stato, download allegati
 - Endpoint: POST /api/requests, POST /api/partners, GET/PATCH admin, GET attachment, auth login/logout/me
 - Credenziali: admin@coa-varese.it / CoaAdmin2026! (in /app/memory/test_credentials.md)
+- Notifiche email Resend ATTIVE: ogni nuova richiesta/candidatura invia email a centro.artigiani@gmail.com (mittente onboarding@resend.dev, modalità test — recapita solo all'email registrata sull'account Resend). Per inviare ad altri indirizzi serve verificare un dominio su resend.com/domains
 
 ## Da completare / note
-- P0: configurare RESEND_API_KEY in backend/.env per attivare le notifiche email (attualmente loggate, NON inviate)
+- P1: verifica dominio su Resend per notifiche a qualsiasi indirizzo e mittente brandizzato (es. noreply@coa-varese.it)
 - P1: email di conferma automatica al cliente
 - P1: refresh token flow frontend (attualmente il token dura 15 min, poi serve rilogin)
 - P2: pagine Privacy/Cookie complete, recensioni pubbliche, filtri/ricerca in admin, contatti reali (telefono/email sono placeholder)

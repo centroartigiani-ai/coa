@@ -164,7 +164,8 @@ async def notify_admin(subject: str, html: str):
             "subject": subject,
             "html": html,
         }
-        await asyncio.to_thread(resend.Emails.send, params)
+        result = await asyncio.to_thread(resend.Emails.send, params)
+        logger.info("Email inviata: %s (id: %s)", subject, result.get("id"))
     except Exception as e:
         logger.error("Invio email fallito: %s", e)
 
