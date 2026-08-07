@@ -183,8 +183,8 @@ async def read_upload(file):
 @api_router.post("/requests")
 async def create_request(
     nome: str = Form(...), cognome: str = Form(...), telefono: str = Form(...), email: str = Form(...),
-    comune: str = Form(...), indirizzo: str = Form(...), tipo_intervento: str = Form(...),
-    descrizione: str = Form(...), urgente: str = Form("no"), photo: UploadFile | None = File(None),
+    indirizzo: str = Form(""), tipo_intervento: str = Form(...),
+    descrizione: str = Form(...), urgente: str = Form("no"), comune: str = Form(""), photo: UploadFile | None = File(None),
 ):
     doc = {
         "id": str(uuid.uuid4()),
@@ -202,7 +202,7 @@ async def create_request(
         ("Comune", comune), ("Indirizzo", indirizzo), ("Tipo", tipo_intervento),
         ("Urgente", "Sì" if doc["urgente"] else "No"), ("Descrizione", descrizione),
     ])
-    await notify_admin(f"[COA] Nuova richiesta: {tipo_intervento} a {comune}", html)
+    await notify_admin(f"[COA] Nuova richiesta: {tipo_intervento}", html)
     return {"id": doc["id"], "message": "Richiesta ricevuta"}
 
 

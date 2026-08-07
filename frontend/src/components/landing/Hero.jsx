@@ -6,9 +6,9 @@ import { MaskedLine } from "@/components/Reveal";
 const HERO_IMG = "https://images.pexels.com/photos/1555177/pexels-photo-1555177.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940";
 
 const STATS = [
-  { value: "15 min", label: "Tempo medio di ricontatto" },
   { value: "100%", label: "Artigiani selezionati e verificati" },
   { value: "1 solo", label: "Punto di contatto per tutto" },
+  { value: "Zero", label: "Ricerca infinita online" },
 ];
 
 export default function Hero({ onRequest, onPartner }) {
@@ -38,9 +38,9 @@ export default function Hero({ onRequest, onPartner }) {
 
         <h1 className="font-display font-black uppercase tracking-tighter leading-[0.92] text-white text-5xl sm:text-6xl md:text-7xl lg:text-8xl">
           <MaskedLine delay={0.35}>Trova l'artigiano</MaskedLine>
-          <MaskedLine delay={0.5}>giusto in meno</MaskedLine>
+          <MaskedLine delay={0.5}>giusto,</MaskedLine>
           <MaskedLine delay={0.65}>
-            di <span className="text-[#FF5A00]">15 minuti.</span>
+            <span className="text-[#FF5A00]">al primo colpo.</span>
           </MaskedLine>
         </h1>
 

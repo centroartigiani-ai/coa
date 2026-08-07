@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api, formatApiError } from "@/lib/api";
 
-const PROFESSIONI = ["Idraulico", "Elettricista", "Tecnico climatizzazione", "Tecnico caldaie", "Manutentore impianti", "Piccole manutenzioni", "Altro"];
+const PROFESSIONI = ["Idraulico", "Elettricista", "Piccole manutenzioni", "Altro"];
 const ESPERIENZA = ["0-2 anni", "3-5 anni", "6-10 anni", "Oltre 10 anni"];
 
 const INITIAL = {

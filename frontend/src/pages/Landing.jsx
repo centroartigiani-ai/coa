@@ -9,7 +9,7 @@ import PartnerSection from "@/components/landing/PartnerSection";
 import Areas from "@/components/landing/Areas";
 import Faq from "@/components/landing/Faq";
 import Footer from "@/components/landing/Footer";
-import RequestFormDialog from "@/components/landing/RequestFormDialog";
+import RequestFormDialog from "@/components/landing/RequestWizard";
 import PartnerFormDialog from "@/components/landing/PartnerFormDialog";
 import WhatsAppFloat from "@/components/landing/WhatsAppFloat";
 

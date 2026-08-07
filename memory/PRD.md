@@ -31,6 +31,7 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 - Notifiche email Resend ATTIVE: ogni nuova richiesta/candidatura invia email a centro.artigiani@gmail.com (mittente onboarding@resend.dev, modalità test — recapita solo all'email registrata sull'account Resend). Per inviare ad altri indirizzi serve verificare un dominio su resend.com/domains
 - Pulsante WhatsApp nell'admin su ogni richiesta e candidatura: apre chat wa.me col cliente/candidato con messaggio precompilato (scelta utente: niente invio automatico perché richiede account Twilio/Meta)
 - Pulsante WhatsApp flottante (verde, basso-destra) su tutta la landing: apre chat wa.me verso +39 352 0248313 con messaggio precompilato per i visitatori
+- Revisione contenuti (07/08/2026): rimosso ogni riferimento ai "15 minuti"; servizi ridotti a 5 (Idraulico, Elettricista, Piccole manutenzioni, Servizi per condomini, Servizi per aziende); aree coperte solo "Varese e provincia"; contatti reali nel footer (+39 352 024 8313, centro.artigiani@gmail.com); form richiesta intervento riscritto come wizard a 3 step (dati → intervento con card icone → riepilogo + foto + schermata di successo), campo Comune rimosso (backend: comune e indirizzo opzionali)
 
 ## Da completare / note
 - P1: verifica dominio su Resend per notifiche a qualsiasi indirizzo e mittente brandizzato (es. noreply@coa-varese.it)

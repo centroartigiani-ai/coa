@@ -148,7 +148,7 @@ export default function AdminDashboard() {
                         <Td className="whitespace-nowrap">{fmtDate(r.created_at)}</Td>
                         <Td><p className="text-white font-medium">{r.nome} {r.cognome}</p><p className="text-xs text-white/40 mt-1 max-w-[220px] truncate" title={r.descrizione}>{r.descrizione}</p></Td>
                         <Td><p>{r.telefono}</p><p className="text-xs text-white/40">{r.email}</p></Td>
-                        <Td>{r.comune}</Td>
+                        <Td>{r.comune || "—"}</Td>
                         <Td>{r.tipo_intervento}</Td>
                         <Td>{r.urgente ? <span data-testid={`urgent-badge-${r.id}`} className="text-xs font-bold text-[#FF5A00] border border-[#FF5A00]/40 bg-[#FF5A00]/10 px-2 py-1">URGENTE</span> : <span className="text-white/20 text-xs">—</span>}</Td>
                         <Td><AttachmentLink item={r} endpoint="requests" /></Td>
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
                           <WhatsAppButton
                             phone={r.telefono}
                             testid={`whatsapp-request-${r.id}`}
-                            message={`Buongiorno ${r.nome}, sono COA — Centrale Operativa Artigiani. Abbiamo ricevuto la sua richiesta di "${r.tipo_intervento}" a ${r.comune}. La ricontatto per organizzare l'intervento.`}
+                            message={`Buongiorno ${r.nome}, sono COA — Centrale Operativa Artigiani. Abbiamo ricevuto la sua richiesta di "${r.tipo_intervento}". La ricontatto per organizzare l'intervento.`}
                           />
                         </Td>
                         <Td><StatusSelect item={r} endpoint="requests" onUpdate={updateReq} testid={`status-select-${r.id}`} /></Td>

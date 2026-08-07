@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 const LEGAL = {
   privacy: {
     title: "Privacy Policy",
-    body: "COA — Centrale Operativa Artigiani tratta i dati personali forniti tramite i moduli del sito esclusivamente per gestire le richieste di intervento e le candidature partner, nel rispetto del Regolamento (UE) 2016/679 (GDPR). I dati non vengono ceduti a terzi al di fuori dei professionisti incaricati dell'intervento. Per esercitare i tuoi diritti scrivi a info@coa-varese.it.",
+    body: "COA — Centrale Operativa Artigiani tratta i dati personali forniti tramite i moduli del sito esclusivamente per gestire le richieste di intervento e le candidature partner, nel rispetto del Regolamento (UE) 2016/679 (GDPR). I dati non vengono ceduti a terzi al di fuori dei professionisti incaricati dell'intervento. Per esercitare i tuoi diritti scrivi a centro.artigiani@gmail.com.",
   },
   cookie: {
     title: "Cookie Policy",
@@ -30,7 +30,7 @@ export default function Footer({ onPartner }) {
               <span className="font-display font-black text-white text-lg tracking-tight">COA</span>
             </div>
             <p className="mt-6 text-white/40 text-sm max-w-xs leading-relaxed">
-              Centrale Operativa Artigiani. Il ponte tra chi ha un problema e chi sa risolverlo, in meno di 15 minuti.
+              Centrale Operativa Artigiani. Il ponte tra chi ha un problema e chi sa risolverlo, a Varese e provincia.
             </p>
             <p className="font-display text-outline text-7xl md:text-8xl font-black uppercase mt-10 select-none">COA</p>
           </div>
@@ -45,11 +45,11 @@ export default function Footer({ onPartner }) {
           </div>
           <div className="md:col-span-4">
             <p className="text-xs font-bold tracking-[0.25em] uppercase text-white/40 mb-6">Contatti</p>
-            <a data-testid="footer-phone" href="tel:+390332000000" className="flex items-center gap-3 text-white/70 hover:text-[#FF5A00] transition-colors">
-              <Phone className="w-4 h-4" strokeWidth={1.5} /> +39 0332 000 000
+            <a data-testid="footer-phone" href="tel:+393520248313" className="flex items-center gap-3 text-white/70 hover:text-[#FF5A00] transition-colors">
+              <Phone className="w-4 h-4" strokeWidth={1.5} /> +39 352 024 8313
             </a>
-            <a data-testid="footer-email" href="mailto:info@coa-varese.it" className="mt-3 flex items-center gap-3 text-white/70 hover:text-[#FF5A00] transition-colors">
-              <Mail className="w-4 h-4" strokeWidth={1.5} /> info@coa-varese.it
+            <a data-testid="footer-email" href="mailto:centro.artigiani@gmail.com" className="mt-3 flex items-center gap-3 text-white/70 hover:text-[#FF5A00] transition-colors">
+              <Mail className="w-4 h-4" strokeWidth={1.5} /> centro.artigiani@gmail.com
             </a>
             <div className="mt-8 flex gap-6">
               <button data-testid="footer-privacy" onClick={() => setLegal("privacy")} className="text-sm text-white/40 hover:text-white transition-colors">Privacy Policy</button>

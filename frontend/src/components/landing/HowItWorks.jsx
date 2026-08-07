@@ -5,7 +5,7 @@ const STEPS = [
   { icon: Send, title: "Invia la richiesta", text: "Compila il modulo oppure contattaci telefonicamente. Bastano pochi dettagli." },
   { icon: SearchCheck, title: "Analizziamo il tuo problema", text: "Valutiamo tipo di intervento, urgenza, località e disponibilità." },
   { icon: UserCheck, title: "Troviamo il professionista ideale", text: "Il sistema individua l'artigiano più vicino e disponibile." },
-  { icon: PhoneCall, title: "Vieni ricontattato", text: "Il professionista ti contatta entro 15 minuti dalla richiesta." },
+  { icon: PhoneCall, title: "Vieni ricontattato", text: "Il professionista ti contatta al più presto per organizzare l'intervento." },
 ];
 
 export default function HowItWorks() {

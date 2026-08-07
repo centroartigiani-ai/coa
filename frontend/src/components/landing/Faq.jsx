@@ -2,7 +2,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Reveal, SectionHeading } from "@/components/Reveal";
 
 const FAQS = [
-  { q: "Quanto tempo serve per essere ricontattati?", a: "Entro circa 15 minuti dalla richiesta. Il professionista più adatto ti contatta direttamente." },
+  { q: "Quanto tempo serve per essere ricontattati?", a: "Il prima possibile: analizziamo subito la tua richiesta e il professionista più adatto ti contatta direttamente." },
   { q: "Gli artigiani sono verificati?", a: "Sì, selezioniamo attentamente ogni professionista prima di inserirlo nella rete COA." },
   { q: "Quanto costa richiedere un intervento?", a: "La richiesta è gratuita. Riceverai il contatto del professionista più adatto senza alcun costo." },
   { q: "Posso richiedere interventi urgenti?", a: "Sì, gestiamo anche richieste urgenti: segnalalo nel modulo e daremo priorità alla tua richiesta." },
