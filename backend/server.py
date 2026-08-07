@@ -172,6 +172,26 @@ async def notify_admin(subject: str, html: str, attachment: dict | None = None):
         logger.error("Invio email fallito: %s", e)
 
 
+async def notify_whatsapp(text: str, photo_url: str | None = None):
+    apikey = os.environ.get("CALLMEBOT_APIKEY")
+    phone = os.environ.get("CALLMEBOT_PHONE")
+    if not apikey or not phone:
+        logger.warning("CallMeBot non configurato: notifica WhatsApp saltata (%s)", text.splitlines()[0])
+        return
+    try:
+        import urllib.parse
+
+        import requests
+        msg = text + (f"\nFoto: {photo_url}" if photo_url else "")
+        url = "https://api.callmebot.com/whatsapp.php?" + urllib.parse.urlencode(
+            {"phone": phone, "text": msg, "apikey": apikey}
+        )
+        resp = await asyncio.to_thread(requests.get, url, timeout=15)
+        logger.info("WhatsApp CallMeBot: HTTP %s", resp.status_code)
+    except Exception as e:
+        logger.error("Invio WhatsApp fallito: %s", e)
+
+
 async def read_upload(file):
     if not file or not file.filename:
         return None
@@ -205,6 +225,17 @@ async def create_request(
         ("Urgente", "Sì" if doc["urgente"] else "No"), ("Descrizione", descrizione),
     ])
     await notify_admin(f"[COA] Nuova richiesta: {tipo_intervento}", html, doc["photo"])
+    photo_url = f"{os.environ.get('PUBLIC_URL')}/api/public/requests/{doc['id']}/photo" if doc["photo"] else None
+    wa_text = (
+        f"NUOVA RICHIESTA COA\n"
+        f"Tipo: {tipo_intervento}\n"
+        f"Cliente: {nome} {cognome}\n"
+        f"Telefono: {telefono}\n"
+        f"Indirizzo: {indirizzo}\n"
+        f"Urgente: {'SI' if doc['urgente'] else 'No'}\n"
+        f"Problema: {descrizione}"
+    )
+    await notify_whatsapp(wa_text, photo_url)
     return {"id": doc["id"], "message": "Richiesta ricevuta"}
 
 
@@ -233,6 +264,15 @@ async def create_partner(
         ("Esperienza", anni_esperienza), ("Messaggio", messaggio),
     ])
     await notify_admin(f"[COA] Nuova candidatura partner: {nome} {cognome}", html, doc["attachment"])
+    wa_text = (
+        f"NUOVA CANDIDATURA PARTNER COA\n"
+        f"Nome: {nome} {cognome}\n"
+        f"Ragione sociale: {ragione_sociale}\n"
+        f"Professione: {professione}\n"
+        f"Telefono: {telefono}\n"
+        f"Zone: {zone_coperte}"
+    )
+    await notify_whatsapp(wa_text)
     return {"id": doc["id"], "message": "Candidatura ricevuta"}
 
 
@@ -311,6 +351,15 @@ async def patch_request(doc_id: str, body: StatusBody, user=Depends(get_current_
 @api_router.patch("/partners/{doc_id}")
 async def patch_partner(doc_id: str, body: StatusBody, user=Depends(get_current_user)):
     return await update_status("partner_applications", doc_id, body.status)
+
+
+@api_router.get("/public/requests/{doc_id}/photo")
+async def public_request_photo(doc_id: str):
+    doc = await db.intervention_requests.find_one({"id": doc_id})
+    if not doc or not doc.get("photo"):
+        raise HTTPException(status_code=404, detail="Foto non trovata")
+    att = doc["photo"]
+    return RawResponse(content=base64.b64decode(att["data"]), media_type=att["content_type"])
 
 
 @api_router.get("/")
