@@ -30,6 +30,7 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 - Credenziali: admin@coa-varese.it / CoaAdmin2026! (in /app/memory/test_credentials.md)
 - Notifiche email Resend ATTIVE: ogni nuova richiesta/candidatura invia email a centro.artigiani@gmail.com (mittente onboarding@resend.dev, modalità test — recapita solo all'email registrata sull'account Resend). Per inviare ad altri indirizzi serve verificare un dominio su resend.com/domains
 - Pulsante WhatsApp nell'admin su ogni richiesta e candidatura: apre chat wa.me col cliente/candidato con messaggio precompilato (scelta utente: niente invio automatico perché richiede account Twilio/Meta)
+- Pulsante WhatsApp flottante (verde, basso-destra) su tutta la landing: apre chat wa.me verso +39 352 0248313 con messaggio precompilato per i visitatori
 
 ## Da completare / note
 - P1: verifica dominio su Resend per notifiche a qualsiasi indirizzo e mittente brandizzato (es. noreply@coa-varese.it)

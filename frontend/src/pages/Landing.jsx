@@ -11,6 +11,7 @@ import Faq from "@/components/landing/Faq";
 import Footer from "@/components/landing/Footer";
 import RequestFormDialog from "@/components/landing/RequestFormDialog";
 import PartnerFormDialog from "@/components/landing/PartnerFormDialog";
+import WhatsAppFloat from "@/components/landing/WhatsAppFloat";
 
 export default function Landing() {
   const [requestOpen, setRequestOpen] = useState(false);
@@ -31,6 +32,7 @@ export default function Landing() {
       <Footer onPartner={() => setPartnerOpen(true)} />
       <RequestFormDialog open={requestOpen} onOpenChange={setRequestOpen} />
       <PartnerFormDialog open={partnerOpen} onOpenChange={setPartnerOpen} />
+      <WhatsAppFloat />
     </div>
   );
 }
