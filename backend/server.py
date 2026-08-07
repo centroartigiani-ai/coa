@@ -160,7 +160,7 @@ async def notify_admin(subject: str, html: str):
         resend.api_key = api_key
         params = {
             "from": os.environ.get("SENDER_EMAIL", "onboarding@resend.dev"),
-            "to": [os.environ.get("ADMIN_EMAIL")],
+            "to": [os.environ.get("NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL")],
             "subject": subject,
             "html": html,
         }
