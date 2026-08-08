@@ -1,21 +1,6 @@
-import { useState } from "react";
 import { Wrench, Phone, Mail } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-
-const LEGAL = {
-  privacy: {
-    title: "Privacy Policy",
-    body: "COA — Centrale Operativa Artigiani tratta i dati personali forniti tramite i moduli del sito esclusivamente per gestire le richieste di intervento e le candidature partner, nel rispetto del Regolamento (UE) 2016/679 (GDPR). I dati non vengono ceduti a terzi al di fuori dei professionisti incaricati dell'intervento. Per esercitare i tuoi diritti scrivi a centro.artigiani@gmail.com.",
-  },
-  cookie: {
-    title: "Cookie Policy",
-    body: "Questo sito utilizza esclusivamente cookie tecnici necessari al funzionamento del servizio e alla sicurezza dell'area riservata. Non vengono utilizzati cookie di profilazione di terze parti.",
-  },
-};
 
 export default function Footer({ onPartner }) {
-  const [legal, setLegal] = useState(null);
-
   const go = (href) => document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 
   return (
@@ -52,8 +37,8 @@ export default function Footer({ onPartner }) {
               <Mail className="w-4 h-4" strokeWidth={1.5} /> centro.artigiani@gmail.com
             </a>
             <div className="mt-8 flex gap-6">
-              <button data-testid="footer-privacy" onClick={() => setLegal("privacy")} className="text-sm text-white/40 hover:text-white transition-colors">Privacy Policy</button>
-              <button data-testid="footer-cookie" onClick={() => setLegal("cookie")} className="text-sm text-white/40 hover:text-white transition-colors">Cookie Policy</button>
+              <a data-testid="footer-privacy" href="/privacy-policy" className="text-sm text-white/40 hover:text-white transition-colors">Privacy Policy</a>
+              <a data-testid="footer-cookie" href="/cookie-policy" className="text-sm text-white/40 hover:text-white transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>
@@ -62,15 +47,6 @@ export default function Footer({ onPartner }) {
           <a data-testid="footer-admin-link" href="/admin/login" className="hover:text-white/60 transition-colors">Area riservata</a>
         </div>
       </div>
-
-      <Dialog open={!!legal} onOpenChange={() => setLegal(null)}>
-        <DialogContent data-testid="legal-dialog" className="bg-[#111111] border-white/10 text-white max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-white">{legal && LEGAL[legal].title}</DialogTitle>
-          </DialogHeader>
-          <p className="text-white/60 text-sm leading-relaxed">{legal && LEGAL[legal].body}</p>
-        </DialogContent>
-      </Dialog>
     </footer>
   );
 }

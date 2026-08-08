@@ -206,8 +206,11 @@ async def read_upload(file):
 async def create_request(
     nome: str = Form(...), cognome: str = Form(...), telefono: str = Form(...), email: str = Form(...),
     indirizzo: str = Form(...), tipo_intervento: str = Form(...),
-    descrizione: str = Form(...), urgente: str = Form("no"), comune: str = Form(""), photo: UploadFile | None = File(None),
+    descrizione: str = Form(...), urgente: str = Form("no"), comune: str = Form(""),
+    privacy: str = Form(...), photo: UploadFile | None = File(None),
 ):
+    if privacy != "true":
+        raise HTTPException(status_code=400, detail="Consenso privacy obbligatorio")
     doc = {
         "id": str(uuid.uuid4()),
         "nome": nome, "cognome": cognome, "telefono": telefono, "email": email,
@@ -215,6 +218,7 @@ async def create_request(
         "descrizione": descrizione,
         "urgente": urgente.lower() in ("si", "sì", "true", "yes", "1"),
         "photo": await read_upload(photo),
+        "privacy_accepted_at": datetime.now(timezone.utc).isoformat(),
         "status": "nuova",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
@@ -244,8 +248,10 @@ async def create_partner(
     nome: str = Form(...), cognome: str = Form(...), ragione_sociale: str = Form(...),
     partita_iva: str = Form(...), telefono: str = Form(...), email: str = Form(...),
     professione: str = Form(...), zone_coperte: str = Form(...), anni_esperienza: str = Form(...),
-    messaggio: str = Form(""), attachment: UploadFile | None = File(None),
+    messaggio: str = Form(""), privacy: str = Form(...), attachment: UploadFile | None = File(None),
 ):
+    if privacy != "true":
+        raise HTTPException(status_code=400, detail="Consenso privacy obbligatorio")
     doc = {
         "id": str(uuid.uuid4()),
         "nome": nome, "cognome": cognome, "ragione_sociale": ragione_sociale,
@@ -253,6 +259,7 @@ async def create_partner(
         "professione": professione, "zone_coperte": zone_coperte,
         "anni_esperienza": anni_esperienza, "messaggio": messaggio,
         "attachment": await read_upload(attachment),
+        "privacy_accepted_at": datetime.now(timezone.utc).isoformat(),
         "status": "nuova",
         "created_at": datetime.now(timezone.utc).isoformat(),
     }

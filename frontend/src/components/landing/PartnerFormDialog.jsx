@@ -16,16 +16,22 @@ const INITIAL = {
 export default function PartnerFormDialog({ open, onOpenChange }) {
   const [form, setForm] = useState(INITIAL);
   const [file, setFile] = useState(null);
+  const [privacy, setPrivacy] = useState(false);
   const [sending, setSending] = useState(false);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!privacy) {
+      toast.error("Devi accettare la Privacy Policy per inviare la candidatura.");
+      return;
+    }
     setSending(true);
     try {
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      fd.append("privacy", "true");
       if (file) fd.append("attachment", file);
       await api.post("/partners", fd);
       toast.success("Candidatura inviata! Ti ricontatteremo presto.");
@@ -121,6 +127,20 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
                   <X className="w-4 h-4" />
                 </button>
               )}
+            </label>
+          </div>
+          <div className="sm:col-span-2">
+            <label className="flex items-start gap-3 cursor-pointer group">
+              <input
+                type="checkbox"
+                data-testid="partner-privacy-checkbox"
+                checked={privacy}
+                onChange={(e) => setPrivacy(e.target.checked)}
+                className="mt-0.5 w-4 h-4 shrink-0 accent-[#FF5A00] cursor-pointer"
+              />
+              <span className="text-xs text-white/50 leading-relaxed group-hover:text-white/70 transition-colors">
+                Ho letto e accetto la <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#FF5A00] underline underline-offset-2">Privacy Policy</a> e acconsento al trattamento dei miei dati personali per la valutazione della candidatura. *
+              </span>
             </label>
           </div>
           <div className="sm:col-span-2 pt-2">
