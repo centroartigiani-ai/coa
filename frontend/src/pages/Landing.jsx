@@ -12,6 +12,7 @@ import Footer from "@/components/landing/Footer";
 import RequestFormDialog from "@/components/landing/RequestWizard";
 import PartnerFormDialog from "@/components/landing/PartnerFormDialog";
 import WhatsAppFloat from "@/components/landing/WhatsAppFloat";
+import StickyCTA from "@/components/landing/StickyCTA";
 
 export default function Landing() {
   const [requestOpen, setRequestOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function Landing() {
       <RequestFormDialog open={requestOpen} onOpenChange={setRequestOpen} />
       <PartnerFormDialog open={partnerOpen} onOpenChange={setPartnerOpen} />
       <WhatsAppFloat />
+      <StickyCTA onRequest={() => setRequestOpen(true)} hidden={requestOpen} />
     </div>
   );
 }

@@ -10,7 +10,7 @@ const ESPERIENZA = ["0-2 anni", "3-5 anni", "6-10 anni", "Oltre 10 anni"];
 
 const INITIAL = {
   nome: "", cognome: "", ragione_sociale: "", partita_iva: "", telefono: "",
-  email: "", professione: "", zone_coperte: "", anni_esperienza: "", messaggio: "",
+  email: "", password: "", professione: "", zone_coperte: "", anni_esperienza: "", messaggio: "",
 };
 
 export default function PartnerFormDialog({ open, onOpenChange }) {
@@ -77,6 +77,11 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
           <div>
             <label className="brutalist-label" htmlFor="par-email">Email *</label>
             <input id="par-email" data-testid="partner-email-input" required type="email" value={form.email} onChange={set("email")} className="brutalist-input" placeholder="luigi@impianti.it" />
+          </div>
+          <div>
+            <label className="brutalist-label" htmlFor="par-password">Password *</label>
+            <input id="par-password" data-testid="partner-password-input" required type="password" minLength={8} value={form.password} onChange={set("password")} className="brutalist-input" placeholder="Minimo 8 caratteri" />
+            <p className="mt-1.5 text-[10px] text-white/30">Servirà per accedere alla tua area riservata partner.</p>
           </div>
           <div>
             <label className="brutalist-label">Professione *</label>

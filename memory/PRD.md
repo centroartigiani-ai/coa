@@ -38,6 +38,18 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 - Restyling (09/08/2026): palette grafite calda #1C1C1E / charcoal #26241F / arancio cantiere #F2A93B / verde fiducia #4CAF7D / testo bianco caldo #F5F1EA; font Space Grotesk (titoli) + Inter (corpo) + IBM Plex Mono (dati); hero con dial "15 min di risposta" animato + chip Elettricista/Idraulico con icone SVG custom; card Idraulico/Elettricista in evidenza ("Servizio core"); animazioni ridotte; area admin mantiene il tema precedente
 - Revisione 2 (09/08/2026): RIMOSSI definitivamente tutti i riferimenti a tempi di risposta specifici (niente "15 minuti" da nessuna parte, dial cronometro eliminato); nuovo H1 SEO "Idraulico o elettricista a Varese? Ti mettiamo in contatto in fretta."; pannello hero Acqua/Corrente con icone custom al posto del dial; CTA primaria ingrandita con glow; sezione Diventa Partner su fascia charcoal separata; marquee rimosso, sezione Zone servite statica con chip comuni (Varese, Busto Arsizio, Gallarate, Saronno...); SEO: title "Idraulico ed Elettricista a Varese | Intervento Rapido - COA", meta description, OG tags, keyword nei testi/alt immagini
 
+## Feature centrale operativa (09/08/2026 — backend completo e testato)
+- Account partner: password scelta in candidatura (obbligatoria, min 8), utente role=partner creato subito, approved=false
+- Approvazione admin: PATCH /api/partners/{id}/approve (stato "approvata" + user.approved + email benvenuto); toggle Premium: PATCH /api/partners/{id}/premium
+- Assegnazione automatica in create_request: match professione+zona (substring su indirizzo o "provincia"), priorità Premium poi anzianità; nessun match → resta non assegnata (admin notificato come sempre); assegnazione manuale: PATCH /api/requests/{id}/assign
+- Endpoint partner: GET /api/partner/me, GET /api/partner/assignments, PATCH /api/partner/assignments/{id} (accettata/completata)
+- Email conferma cliente (testo generico "il prima possibile", niente 15 min) + email assegnazione partner + invito recensione al completamento (token monouso, link /recensione/{token})
+- Recensioni: POST /api/reviews (token), GET /api/reviews/public (solo approvate), GET/PATCH admin per moderazione
+- Sicurezza: require_admin su tutti gli endpoint admin (prima bastava essere loggati)
+- CTA sticky "Richiedi un intervento": appare dopo 500px di scroll, bottom-center desktop / bottom bar mobile (lascia spazio al pallino WhatsApp), glow arancio, si nasconde col modulo aperto
+- MANCA (frontend): pagine /partner/login, /partner dashboard, /recensione/:token, sezione recensioni homepage, colonna assegnazione/approva/premium + tab recensioni in AdminDashboard
+- NOTA: email a indirizzi esterni (cliente/partner) falliscono in modalità test Resend finché non si verifica un dominio
+
 ## In coda (approvato dall'utente, in attesa di risposte a 3 quesiti)
 1. Dashboard artigiani con login proprio + onboarding/verifica (quesito: come ricevono le credenziali — password in candidatura vs admin-created)
 2. Assegnazione automatica richieste → partner per zona/professione con priorità Premium (quesito: comportamento se nessun match)

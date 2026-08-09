@@ -82,6 +82,18 @@ async def get_current_user(request: Request):
     return {"id": str(user["_id"]), "email": user["email"], "name": user.get("name", "Admin"), "role": user.get("role", "admin")}
 
 
+async def require_admin(user=Depends(get_current_user)):
+    if user.get("role") != "admin":
+        raise HTTPException(status_code=403, detail="Accesso riservato all'amministratore")
+    return user
+
+
+async def get_current_partner(user=Depends(get_current_user)):
+    if user.get("role") != "partner":
+        raise HTTPException(status_code=403, detail="Accesso riservato ai partner")
+    return user
+
+
 async def check_lockout(identifier: str):
     rec = await db.login_attempts.find_one({"identifier": identifier})
     if rec and rec.get("locked_until"):
@@ -151,25 +163,29 @@ def build_email_html(title: str, fields: list) -> str:
             f'{rows}</table>')
 
 
-async def notify_admin(subject: str, html: str, attachment: dict | None = None):
+async def send_email(to: str, subject: str, html: str, attachment: dict | None = None):
     api_key = os.environ.get("RESEND_API_KEY")
     if not api_key or resend is None:
-        logger.warning("RESEND_API_KEY non configurata: notifica email saltata (%s)", subject)
+        logger.warning("RESEND_API_KEY non configurata: email saltata (%s)", subject)
         return
     try:
         resend.api_key = api_key
         params = {
             "from": os.environ.get("SENDER_EMAIL", "onboarding@resend.dev"),
-            "to": [os.environ.get("NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL")],
+            "to": [to],
             "subject": subject,
             "html": html,
         }
         if attachment:
             params["attachments"] = [{"filename": attachment["filename"], "content": attachment["data"]}]
         result = await asyncio.to_thread(resend.Emails.send, params)
-        logger.info("Email inviata: %s (id: %s)", subject, result.get("id"))
+        logger.info("Email inviata a %s: %s (id: %s)", to, subject, result.get("id"))
     except Exception as e:
-        logger.error("Invio email fallito: %s", e)
+        logger.error("Invio email fallito verso %s: %s", to, e)
+
+
+async def notify_admin(subject: str, html: str, attachment: dict | None = None):
+    await send_email(os.environ.get("NOTIFY_EMAIL") or os.environ.get("ADMIN_EMAIL"), subject, html, attachment)
 
 
 async def notify_whatsapp(text: str, photo_url: str | None = None):
@@ -200,6 +216,47 @@ async def read_upload(file):
         raise HTTPException(status_code=400, detail="File troppo grande (max 5MB)")
     return {"filename": file.filename, "content_type": file.content_type or "application/octet-stream",
             "data": base64.b64encode(data).decode()}
+
+
+async def find_partner(tipo: str, indirizzo: str):
+    indirizzo_norm = (indirizzo or "").lower()
+    partners = await db.users.find({"role": "partner", "approved": True}, {"_id": 0, "password_hash": 0}).to_list(500)
+    apps = {a["email"].lower(): a for a in await db.partner_applications.find({}, {"_id": 0, "attachment": 0}).to_list(500)}
+    matched = []
+    for p in partners:
+        app_doc = apps.get(p["email"])
+        if not app_doc:
+            continue
+        prof = app_doc.get("professione", "")
+        if prof != tipo and tipo not in ("Servizi per condomini", "Servizi per aziende"):
+            continue
+        zones = [z.strip().lower() for z in app_doc.get("zone_coperte", "").split(",") if z.strip()]
+        zone_ok = any(z in ("provincia", "varese e provincia", "tutta la provincia") for z in zones) or any(z and z in indirizzo_norm for z in zones)
+        if zone_ok:
+            matched.append(p)
+    matched.sort(key=lambda p: (not p.get("premium", False), p.get("created_at", datetime.min.replace(tzinfo=timezone.utc))))
+    if matched:
+        m = matched[0]
+        return {"email": m["email"], "name": m.get("name", "")}
+    return None
+
+
+async def complete_request(rid: str):
+    doc = await db.intervention_requests.find_one({"id": rid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Elemento non trovato")
+    update = {"status": "completata"}
+    if not doc.get("review_token"):
+        token = str(uuid.uuid4())
+        update["review_token"] = token
+        link = f"{os.environ.get('PUBLIC_URL')}/recensione/{token}"
+        html = build_email_html("Grazie per aver scelto COA", [
+            ("Intervento", doc.get("tipo_intervento", "")),
+            ("Come è andata?", "Il tuo intervento è stato completato. Lascia una recensione: aiuta altri clienti e i nostri artigiani."),
+            ("Lascia la recensione", f'<a href="{link}" style="color:#F2A93B;">{link}</a>'),
+        ])
+        await send_email(doc["email"], "COA — Com'è andata? Lascia una recensione", html)
+    await db.intervention_requests.update_one({"id": rid}, {"$set": update})
 
 
 @api_router.post("/requests")
@@ -240,7 +297,27 @@ async def create_request(
         f"Problema: {descrizione}"
     )
     await notify_whatsapp(wa_text, photo_url)
-    return {"id": doc["id"], "message": "Richiesta ricevuta"}
+    confirm_html = build_email_html("Abbiamo ricevuto la tua richiesta", [
+        ("Tipo di intervento", tipo_intervento),
+        ("Indirizzo", indirizzo),
+        ("Cosa succede ora", "La nostra centrale operativa sta analizzando la tua richiesta: il professionista più adatto ti ricontatterà il prima possibile."),
+    ])
+    await send_email(email, "COA — Richiesta ricevuta", confirm_html)
+    partner = await find_partner(tipo_intervento, indirizzo)
+    assigned = False
+    if partner:
+        await db.intervention_requests.update_one({"id": doc["id"]}, {"$set": {
+            "assigned_to": partner["email"], "assigned_name": partner["name"],
+            "assignment_status": "assegnata", "assigned_at": datetime.now(timezone.utc).isoformat(),
+        }})
+        assigned = True
+        assign_html = build_email_html("Nuova richiesta assegnata a te", [
+            ("Tipo", tipo_intervento), ("Indirizzo", indirizzo),
+            ("Urgente", "Sì" if doc["urgente"] else "No"), ("Problema", descrizione),
+            ("Accedi", f'<a href="{os.environ.get("PUBLIC_URL")}/partner/login" style="color:#F2A93B;">Vai alla tua area partner</a>'),
+        ])
+        await send_email(partner["email"], f"[COA] Nuovo intervento assegnato: {tipo_intervento}", assign_html)
+    return {"id": doc["id"], "message": "Richiesta ricevuta", "assigned": assigned}
 
 
 @api_router.post("/partners")
@@ -248,14 +325,19 @@ async def create_partner(
     nome: str = Form(...), cognome: str = Form(...), ragione_sociale: str = Form(...),
     partita_iva: str = Form(...), telefono: str = Form(...), email: str = Form(...),
     professione: str = Form(...), zone_coperte: str = Form(...), anni_esperienza: str = Form(...),
-    messaggio: str = Form(""), privacy: str = Form(...), attachment: UploadFile | None = File(None),
+    messaggio: str = Form(""), privacy: str = Form(...), password: str = Form(...), attachment: UploadFile | None = File(None),
 ):
     if privacy != "true":
         raise HTTPException(status_code=400, detail="Consenso privacy obbligatorio")
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="La password deve avere almeno 8 caratteri")
+    email_norm = email.lower()
+    if await db.users.find_one({"email": email_norm}):
+        raise HTTPException(status_code=400, detail="Esiste già un account con questa email")
     doc = {
         "id": str(uuid.uuid4()),
         "nome": nome, "cognome": cognome, "ragione_sociale": ragione_sociale,
-        "partita_iva": partita_iva, "telefono": telefono, "email": email,
+        "partita_iva": partita_iva, "telefono": telefono, "email": email_norm,
         "professione": professione, "zone_coperte": zone_coperte,
         "anni_esperienza": anni_esperienza, "messaggio": messaggio,
         "attachment": await read_upload(attachment),
@@ -264,6 +346,12 @@ async def create_partner(
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     await db.partner_applications.insert_one(doc)
+    await db.users.insert_one({
+        "email": email_norm, "password_hash": hash_password(password),
+        "name": f"{nome} {cognome}", "role": "partner",
+        "approved": False, "premium": False,
+        "created_at": datetime.now(timezone.utc),
+    })
     html = build_email_html(f"Nuova candidatura partner — {professione}", [
         ("Nome", f"{nome} {cognome}"), ("Ragione sociale", ragione_sociale),
         ("P.IVA", partita_iva), ("Telefono", telefono), ("Email", email),
@@ -296,7 +384,7 @@ def serialize_docs(docs, file_key):
 
 
 @api_router.get("/requests")
-async def list_requests(user=Depends(get_current_user)):
+async def list_requests(user=Depends(require_admin)):
     docs = await db.intervention_requests.find({}, {"photo": 0, "_id": 0}).sort("created_at", -1).to_list(500)
     with_flag = await db.intervention_requests.find({}, {"photo.filename": 1, "id": 1, "_id": 0}).to_list(500)
     names = {d["id"]: (d.get("photo") or {}).get("filename") for d in with_flag}
@@ -307,13 +395,17 @@ async def list_requests(user=Depends(get_current_user)):
 
 
 @api_router.get("/partners")
-async def list_partners(user=Depends(get_current_user)):
+async def list_partners(user=Depends(require_admin)):
     docs = await db.partner_applications.find({}, {"attachment": 0, "_id": 0}).sort("created_at", -1).to_list(500)
     with_flag = await db.partner_applications.find({}, {"attachment.filename": 1, "id": 1, "_id": 0}).to_list(500)
     names = {d["id"]: (d.get("attachment") or {}).get("filename") for d in with_flag}
+    users = {u["email"]: u for u in await db.users.find({"role": "partner"}, {"_id": 0}).to_list(500)}
     for d in docs:
         d["has_attachment"] = bool(names.get(d["id"]))
         d["attachment_name"] = names.get(d["id"])
+        u = users.get(d["email"].lower())
+        d["approved"] = bool(u and u.get("approved"))
+        d["premium"] = bool(u and u.get("premium"))
     return docs
 
 
@@ -328,12 +420,12 @@ async def get_attachment(collection, doc_id, file_key):
 
 
 @api_router.get("/requests/{doc_id}/attachment")
-async def request_attachment(doc_id: str, user=Depends(get_current_user)):
+async def request_attachment(doc_id: str, user=Depends(require_admin)):
     return await get_attachment("intervention_requests", doc_id, "photo")
 
 
 @api_router.get("/partners/{doc_id}/attachment")
-async def partner_attachment(doc_id: str, user=Depends(get_current_user)):
+async def partner_attachment(doc_id: str, user=Depends(require_admin)):
     return await get_attachment("partner_applications", doc_id, "attachment")
 
 
@@ -341,8 +433,8 @@ class StatusBody(BaseModel):
     status: str
 
 
-async def update_status(collection, doc_id, status):
-    if status not in STATUSES:
+async def update_status(collection, doc_id, status, allowed=None):
+    if status not in (allowed or STATUSES):
         raise HTTPException(status_code=400, detail="Stato non valido")
     res = await db[collection].update_one({"id": doc_id}, {"$set": {"status": status}})
     if res.matched_count == 0:
@@ -351,13 +443,16 @@ async def update_status(collection, doc_id, status):
 
 
 @api_router.patch("/requests/{doc_id}")
-async def patch_request(doc_id: str, body: StatusBody, user=Depends(get_current_user)):
+async def patch_request(doc_id: str, body: StatusBody, user=Depends(require_admin)):
+    if body.status == "completata":
+        await complete_request(doc_id)
+        return {"ok": True}
     return await update_status("intervention_requests", doc_id, body.status)
 
 
 @api_router.patch("/partners/{doc_id}")
-async def patch_partner(doc_id: str, body: StatusBody, user=Depends(get_current_user)):
-    return await update_status("partner_applications", doc_id, body.status)
+async def patch_partner(doc_id: str, body: StatusBody, user=Depends(require_admin)):
+    return await update_status("partner_applications", doc_id, body.status, allowed=STATUSES + ["approvata"])
 
 
 @api_router.get("/public/requests/{doc_id}/photo")
@@ -372,6 +467,158 @@ async def public_request_photo(doc_id: str):
 @api_router.get("/")
 async def root():
     return {"message": "COA API attiva"}
+
+
+@api_router.get("/partner/me")
+async def partner_me(user=Depends(get_current_partner)):
+    app_doc = await db.partner_applications.find_one({"email": user["email"]}, {"_id": 0, "attachment": 0})
+    full = await db.users.find_one({"email": user["email"]}, {"_id": 0, "password_hash": 0})
+    if full:
+        full["created_at"] = full["created_at"].isoformat() if isinstance(full.get("created_at"), datetime) else full.get("created_at")
+    return {"user": full, "application": app_doc}
+
+
+@api_router.get("/partner/assignments")
+async def partner_assignments(user=Depends(get_current_partner)):
+    return await db.intervention_requests.find(
+        {"assigned_to": user["email"]}, {"_id": 0, "photo": 0}
+    ).sort("assigned_at", -1).to_list(200)
+
+
+class AssignmentStatusBody(BaseModel):
+    status: str
+
+
+@api_router.patch("/partner/assignments/{rid}")
+async def partner_update_assignment(rid: str, body: AssignmentStatusBody, user=Depends(get_current_partner)):
+    if body.status not in ("accettata", "completata"):
+        raise HTTPException(status_code=400, detail="Stato non valido")
+    res = await db.intervention_requests.update_one(
+        {"id": rid, "assigned_to": user["email"]}, {"$set": {"assignment_status": body.status}}
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Assegnazione non trovata")
+    if body.status == "accettata":
+        await db.intervention_requests.update_one({"id": rid}, {"$set": {"status": "in_lavorazione"}})
+    elif body.status == "completata":
+        await complete_request(rid)
+    return {"ok": True}
+
+
+@api_router.get("/admin/partners-list")
+async def admin_partners_list(user=Depends(require_admin)):
+    partners = await db.users.find({"role": "partner", "approved": True}, {"_id": 0, "password_hash": 0}).to_list(500)
+    apps = {a["email"].lower(): a for a in await db.partner_applications.find({}, {"_id": 0, "attachment": 0}).to_list(500)}
+    out = []
+    for p in partners:
+        a = apps.get(p["email"], {})
+        out.append({"email": p["email"], "name": p.get("name", ""), "premium": bool(p.get("premium")),
+                    "professione": a.get("professione", ""), "zone_coperte": a.get("zone_coperte", "")})
+    return out
+
+
+@api_router.patch("/partners/{doc_id}/approve")
+async def approve_partner(doc_id: str, user=Depends(require_admin)):
+    app_doc = await db.partner_applications.find_one({"id": doc_id})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Candidatura non trovata")
+    await db.partner_applications.update_one({"id": doc_id}, {"$set": {"status": "approvata"}})
+    await db.users.update_one({"email": app_doc["email"].lower()}, {"$set": {"approved": True}})
+    html = build_email_html("Candidatura approvata — benvenuto nella rete COA", [
+        ("Cosa succede ora", "Il tuo account partner è attivo: le richieste della tua zona e professione ti verranno assegnate automaticamente."),
+        ("Accedi", f'<a href="{os.environ.get("PUBLIC_URL")}/partner/login" style="color:#F2A93B;">Vai alla tua area partner</a>'),
+    ])
+    await send_email(app_doc["email"], "COA — Candidatura approvata", html)
+    return {"ok": True}
+
+
+@api_router.patch("/partners/{doc_id}/premium")
+async def toggle_premium(doc_id: str, user=Depends(require_admin)):
+    app_doc = await db.partner_applications.find_one({"id": doc_id})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Candidatura non trovata")
+    u = await db.users.find_one({"email": app_doc["email"].lower()})
+    if not u:
+        raise HTTPException(status_code=404, detail="Account partner non trovato")
+    new_val = not u.get("premium", False)
+    await db.users.update_one({"email": app_doc["email"].lower()}, {"$set": {"premium": new_val}})
+    return {"ok": True, "premium": new_val}
+
+
+class AssignBody(BaseModel):
+    partner_email: str
+
+
+@api_router.patch("/requests/{doc_id}/assign")
+async def assign_request(doc_id: str, body: AssignBody, user=Depends(require_admin)):
+    partner = await db.users.find_one({"email": body.partner_email.lower(), "role": "partner", "approved": True})
+    if not partner:
+        raise HTTPException(status_code=404, detail="Partner non trovato o non approvato")
+    res = await db.intervention_requests.update_one({"id": doc_id}, {"$set": {
+        "assigned_to": partner["email"], "assigned_name": partner.get("name", ""),
+        "assignment_status": "assegnata", "assigned_at": datetime.now(timezone.utc).isoformat(),
+    }})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Richiesta non trovata")
+    return {"ok": True}
+
+
+class ReviewBody(BaseModel):
+    token: str
+    rating: int
+    text: str
+    nome: str = ""
+
+
+@api_router.get("/reviews/token/{token}")
+async def review_token_info(token: str):
+    doc = await db.intervention_requests.find_one({"review_token": token}, {"_id": 0})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Link non valido")
+    if await db.reviews.find_one({"token": token}):
+        raise HTTPException(status_code=400, detail="Recensione già inviata")
+    return {"nome": doc["nome"], "tipo_intervento": doc["tipo_intervento"]}
+
+
+@api_router.post("/reviews")
+async def create_review(body: ReviewBody):
+    if not 1 <= body.rating <= 5:
+        raise HTTPException(status_code=400, detail="Voto non valido")
+    doc = await db.intervention_requests.find_one({"review_token": body.token})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Link non valido")
+    if await db.reviews.find_one({"token": body.token}):
+        raise HTTPException(status_code=400, detail="Recensione già inviata")
+    review = {
+        "id": str(uuid.uuid4()), "token": body.token, "request_id": doc["id"],
+        "nome": body.nome.strip() or doc["nome"], "rating": body.rating, "text": body.text.strip(),
+        "tipo_intervento": doc["tipo_intervento"], "approved": False,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+    await db.reviews.insert_one(review)
+    return {"ok": True}
+
+
+@api_router.get("/reviews/public")
+async def public_reviews():
+    return await db.reviews.find({"approved": True}, {"_id": 0, "token": 0, "request_id": 0}).sort("created_at", -1).to_list(6)
+
+
+@api_router.get("/reviews")
+async def list_reviews(user=Depends(require_admin)):
+    return await db.reviews.find({}, {"_id": 0}).sort("created_at", -1).to_list(500)
+
+
+class ReviewApproveBody(BaseModel):
+    approved: bool
+
+
+@api_router.patch("/reviews/{rid}")
+async def patch_review(rid: str, body: ReviewApproveBody, user=Depends(require_admin)):
+    res = await db.reviews.update_one({"id": rid}, {"$set": {"approved": body.approved}})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Recensione non trovata")
+    return {"ok": True}
 
 
 app.include_router(api_router)
