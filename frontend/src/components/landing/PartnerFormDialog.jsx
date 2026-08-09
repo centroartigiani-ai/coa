@@ -47,9 +47,9 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid="partner-form-dialog" className="bg-[#111111] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto rounded-none">
+      <DialogContent data-testid="partner-form-dialog" className="bg-[#26241F] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto rounded-none">
         <DialogHeader>
-          <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#FF5A00]">Diventa partner</p>
+          <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B]">Diventa partner</p>
           <DialogTitle className="font-display text-3xl font-bold text-white">Candidati come Partner</DialogTitle>
           <DialogDescription className="text-white/50">Ricevi richieste di lavoro qualificate senza investire in pubblicità.</DialogDescription>
         </DialogHeader>
@@ -86,7 +86,7 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
               </SelectTrigger>
               <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
                 {PROFESSIONI.map((p) => (
-                  <SelectItem key={p} value={p} data-testid={`partner-professione-${p.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} className="focus:bg-[#FF5A00] focus:text-white">
+                  <SelectItem key={p} value={p} data-testid={`partner-professione-${p.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`} className="focus:bg-[#F2A93B] focus:text-[#1C1C1E]">
                     {p}
                   </SelectItem>
                 ))}
@@ -101,7 +101,7 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
               </SelectTrigger>
               <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
                 {ESPERIENZA.map((p) => (
-                  <SelectItem key={p} value={p} data-testid={`partner-esperienza-${p.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`} className="focus:bg-[#FF5A00] focus:text-white">
+                  <SelectItem key={p} value={p} data-testid={`partner-esperienza-${p.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`} className="focus:bg-[#F2A93B] focus:text-[#1C1C1E]">
                     {p}
                   </SelectItem>
                 ))}
@@ -110,7 +110,7 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
           </div>
           <div className="sm:col-span-2">
             <label className="brutalist-label" htmlFor="par-zone">Zone coperte *</label>
-            <input id="par-zone" data-testid="partner-zone-input" required value={form.zone_coperte} onChange={set("zone_coperte")} className="brutalist-input" placeholder="Es. Varese, Gallarate, Busto Arsizio" />
+            <input id="par-zone" data-testid="partner-zone-input" required value={form.zone_coperte} onChange={set("zone_coperte")} className="brutalist-input" placeholder="Es. Varese e comuni della provincia" />
           </div>
           <div className="sm:col-span-2">
             <label className="brutalist-label" htmlFor="par-messaggio">Messaggio</label>
@@ -118,7 +118,7 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
           </div>
           <div className="sm:col-span-2">
             <label className="brutalist-label">Allega visura/CV (opzionale)</label>
-            <label data-testid="partner-attachment-upload" className="flex items-center gap-3 border border-dashed border-white/20 px-4 py-4 cursor-pointer hover:border-[#FF5A00] transition-colors text-white/50 text-sm">
+            <label data-testid="partner-attachment-upload" className="flex items-center gap-3 border border-dashed border-white/20 px-4 py-4 cursor-pointer hover:border-[#F2A93B] transition-colors text-white/50 text-sm">
               <Paperclip className="w-4 h-4" strokeWidth={1.5} />
               {file ? file.name : "Scegli un file (max 5MB)"}
               <input type="file" accept="image/*,.pdf" className="hidden" onChange={(e) => setFile(e.target.files[0] || null)} />
@@ -136,10 +136,10 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
                 data-testid="partner-privacy-checkbox"
                 checked={privacy}
                 onChange={(e) => setPrivacy(e.target.checked)}
-                className="mt-0.5 w-4 h-4 shrink-0 accent-[#FF5A00] cursor-pointer"
+                className="mt-0.5 w-4 h-4 shrink-0 accent-[#F2A93B] cursor-pointer"
               />
               <span className="text-xs text-white/50 leading-relaxed group-hover:text-white/70 transition-colors">
-                Ho letto e accetto la <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#FF5A00] underline underline-offset-2">Privacy Policy</a> e acconsento al trattamento dei miei dati personali per la valutazione della candidatura. *
+                Ho letto e accetto la <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#F2A93B] underline underline-offset-2">Privacy Policy</a> e acconsento al trattamento dei miei dati personali per la valutazione della candidatura. *
               </span>
             </label>
           </div>
@@ -148,7 +148,7 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
               data-testid="partner-submit-button"
               type="submit"
               disabled={sending}
-              className="w-full bg-[#FF5A00] text-white px-8 py-4 font-medium hover:bg-[#E04F00] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+              className="w-full bg-[#F2A93B] text-[#1C1C1E] px-8 py-4 font-medium hover:bg-[#D98E1F] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
             >
               {sending && <Loader2 className="w-4 h-4 animate-spin" />}
               {sending ? "Invio in corso..." : "Invia candidatura"}

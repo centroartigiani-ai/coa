@@ -37,11 +37,11 @@ export default function CookieConsent() {
   if (!show) return null;
 
   return (
-    <div data-testid="cookie-banner" className="fixed bottom-0 left-0 right-0 z-[100] bg-[#111111] border-t border-white/10">
+    <div data-testid="cookie-banner" className="fixed bottom-0 left-0 right-0 z-[100] bg-[#26241F] border-t border-white/10">
       <div className="px-6 md:px-12 mx-auto max-w-7xl py-6 flex flex-col md:flex-row md:items-center gap-6">
         <p className="text-sm text-white/60 flex-1 leading-relaxed">
           Questo sito utilizza cookie tecnici necessari al funzionamento e, previo consenso, cookie statistici per migliorare l'esperienza.
-          Puoi accettare, rifiutare o leggere la <a data-testid="cookie-banner-policy-link" href="/cookie-policy" className="text-[#FF5A00] underline underline-offset-2">Cookie Policy</a>.
+          Puoi accettare, rifiutare o leggere la <a data-testid="cookie-banner-policy-link" href="/cookie-policy" className="text-[#F2A93B] underline underline-offset-2">Cookie Policy</a>.
         </p>
         <div className="flex gap-3 shrink-0">
           <button
@@ -54,7 +54,7 @@ export default function CookieConsent() {
           <button
             data-testid="cookie-accept-button"
             onClick={() => choose("accepted")}
-            className="bg-[#FF5A00] text-white px-6 py-3 text-sm font-medium hover:bg-[#E04F00] transition-colors"
+            className="bg-[#F2A93B] text-[#1C1C1E] px-6 py-3 text-sm font-medium hover:bg-[#D98E1F] transition-colors"
           >
             Accetta
           </button>

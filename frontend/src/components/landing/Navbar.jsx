@@ -33,8 +33,8 @@ export default function Navbar({ onRequest }) {
     >
       <div className="px-6 md:px-12 mx-auto max-w-7xl flex items-center justify-between h-20">
         <button data-testid="nav-logo" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} className="flex items-center gap-3 group">
-          <span className="w-9 h-9 bg-[#FF5A00] flex items-center justify-center transition-transform duration-300 group-hover:rotate-90">
-            <Wrench className="w-4 h-4 text-black" strokeWidth={2.5} />
+          <span className="w-9 h-9 bg-[#F2A93B] flex items-center justify-center">
+            <Wrench className="w-4 h-4 text-[#1C1C1E]" strokeWidth={2.5} />
           </span>
           <span className="text-left leading-none">
             <span className="font-display font-black text-white text-lg tracking-tight block">COA</span>
@@ -54,7 +54,7 @@ export default function Navbar({ onRequest }) {
           <button
             data-testid="nav-request-cta"
             onClick={onRequest}
-            className="hidden sm:inline-flex bg-[#FF5A00] text-white px-6 py-3 text-sm font-medium hover:bg-[#E04F00] transition-colors"
+            className="hidden sm:inline-flex bg-[#F2A93B] text-[#1C1C1E] px-6 py-3 text-sm font-medium hover:bg-[#D98E1F] transition-colors"
           >
             Richiedi un intervento
           </button>
@@ -74,7 +74,7 @@ export default function Navbar({ onRequest }) {
           <button
             data-testid="nav-request-cta-mobile"
             onClick={() => { setOpen(false); onRequest(); }}
-            className="mt-2 bg-[#FF5A00] text-white px-6 py-4 text-sm font-medium hover:bg-[#E04F00] transition-colors"
+            className="mt-2 bg-[#F2A93B] text-[#1C1C1E] px-6 py-4 text-sm font-medium hover:bg-[#D98E1F] transition-colors"
           >
             Richiedi un intervento
           </button>

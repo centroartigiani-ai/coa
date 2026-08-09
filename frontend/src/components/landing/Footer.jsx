@@ -4,12 +4,12 @@ export default function Footer({ onPartner }) {
   const go = (href) => document.querySelector(href)?.scrollIntoView({ behavior: "smooth" });
 
   return (
-    <footer data-testid="footer" className="border-t border-white/10 bg-[#0A0A0A]">
+    <footer data-testid="footer" className="border-t border-white/10 bg-[#1C1C1E]">
       <div className="px-6 md:px-12 mx-auto max-w-7xl py-20">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12">
           <div className="md:col-span-5">
             <div className="flex items-center gap-3">
-              <span className="w-9 h-9 bg-[#FF5A00] flex items-center justify-center">
+              <span className="w-9 h-9 bg-[#F2A93B] flex items-center justify-center">
                 <Wrench className="w-4 h-4 text-black" strokeWidth={2.5} />
               </span>
               <span className="font-display font-black text-white text-lg tracking-tight">COA</span>
@@ -22,18 +22,18 @@ export default function Footer({ onPartner }) {
           <div className="md:col-span-3">
             <p className="text-xs font-bold tracking-[0.25em] uppercase text-white/40 mb-6">Menu</p>
             <ul className="space-y-3">
-              <li><button data-testid="footer-chi-siamo" onClick={() => go("#come-funziona")} className="text-white/70 hover:text-[#FF5A00] transition-colors">Chi siamo</button></li>
-              <li><button data-testid="footer-servizi" onClick={() => go("#servizi")} className="text-white/70 hover:text-[#FF5A00] transition-colors">Servizi</button></li>
-              <li><button data-testid="footer-partner" onClick={onPartner} className="text-white/70 hover:text-[#FF5A00] transition-colors">Diventa Partner</button></li>
-              <li><button data-testid="footer-contatti" onClick={() => go("#faq")} className="text-white/70 hover:text-[#FF5A00] transition-colors">Contatti</button></li>
+              <li><button data-testid="footer-chi-siamo" onClick={() => go("#come-funziona")} className="text-white/70 hover:text-[#F2A93B] transition-colors">Chi siamo</button></li>
+              <li><button data-testid="footer-servizi" onClick={() => go("#servizi")} className="text-white/70 hover:text-[#F2A93B] transition-colors">Servizi</button></li>
+              <li><button data-testid="footer-partner" onClick={onPartner} className="text-white/70 hover:text-[#F2A93B] transition-colors">Diventa Partner</button></li>
+              <li><button data-testid="footer-contatti" onClick={() => go("#faq")} className="text-white/70 hover:text-[#F2A93B] transition-colors">Contatti</button></li>
             </ul>
           </div>
           <div className="md:col-span-4">
             <p className="text-xs font-bold tracking-[0.25em] uppercase text-white/40 mb-6">Contatti</p>
-            <a data-testid="footer-phone" href="tel:+393520248313" className="flex items-center gap-3 text-white/70 hover:text-[#FF5A00] transition-colors">
+            <a data-testid="footer-phone" href="tel:+393520248313" className="flex items-center gap-3 text-white/70 hover:text-[#F2A93B] transition-colors">
               <Phone className="w-4 h-4" strokeWidth={1.5} /> +39 352 024 8313
             </a>
-            <a data-testid="footer-email" href="mailto:centro.artigiani@gmail.com" className="mt-3 flex items-center gap-3 text-white/70 hover:text-[#FF5A00] transition-colors">
+            <a data-testid="footer-email" href="mailto:centro.artigiani@gmail.com" className="mt-3 flex items-center gap-3 text-white/70 hover:text-[#F2A93B] transition-colors">
               <Mail className="w-4 h-4" strokeWidth={1.5} /> centro.artigiani@gmail.com
             </a>
             <div className="mt-8 flex gap-6">

@@ -20,8 +20,7 @@ export default function WhatsAppFloat() {
       whileTap={{ scale: 0.95 }}
       className="fixed bottom-6 right-6 z-[80] group flex items-center gap-0 bg-[#25D366] text-white rounded-full p-4 shadow-[0_8px_30px_rgba(37,211,102,0.35)] hover:shadow-[0_8px_40px_rgba(37,211,102,0.5)] transition-shadow"
     >
-      <span className="absolute inset-0 rounded-full bg-[#25D366] animate-ping opacity-20 pointer-events-none" />
-      <MessageCircle className="w-7 h-7 relative" strokeWidth={2} />
+      <MessageCircle className="w-7 h-7" strokeWidth={2} />
       <span className="max-w-0 overflow-hidden group-hover:max-w-[180px] group-hover:ml-3 transition-[max-width,margin] duration-500 text-sm font-medium whitespace-nowrap relative">
         Scrivici su WhatsApp
       </span>

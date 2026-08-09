@@ -13,9 +13,9 @@ const BENEFITS = [
 
 export default function Problem() {
   return (
-    <section data-testid="problem-section" className="py-24 md:py-32 bg-[#111111] border-y border-white/10">
+    <section data-testid="problem-section" className="py-24 md:py-32 bg-[#26241F] border-y border-white/10">
       <div className="px-6 md:px-12 mx-auto max-w-7xl">
-        <SectionHeading number="02" label="Il problema che risolviamo" title={<>Trovare un artigiano affidabile non dovrebbe essere <span className="text-[#FF5A00]">un'odissea.</span></>} />
+        <SectionHeading number="02" label="Il problema che risolviamo" title={<>Trovare un artigiano affidabile non dovrebbe essere <span className="text-[#F2A93B]">un'odissea.</span></>} />
         <div className="mt-16 grid grid-cols-1 lg:grid-cols-2 gap-16">
           <Reveal>
             <div data-testid="problem-pains">
@@ -30,19 +30,19 @@ export default function Problem() {
                   </li>
                 ))}
               </ul>
-              <p className="mt-10 text-white/70 text-base md:text-lg max-w-md border-l-2 border-[#FF5A00] pl-6">
+              <p className="mt-10 text-white/70 text-base md:text-lg max-w-md border-l-2 border-[#F2A93B] pl-6">
                 COA nasce per semplificare tutto il processo: una richiesta, una sola attesa, il professionista giusto.
               </p>
             </div>
           </Reveal>
           <Reveal delay={0.15}>
-            <div data-testid="why-coa" className="bg-[#0A0A0A] border border-white/10 p-8 md:p-10">
-              <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#FF5A00]">Perché scegliere COA</p>
+            <div data-testid="why-coa" className="bg-[#1C1C1E] border border-white/10 p-8 md:p-10">
+              <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B]">Perché scegliere COA</p>
               <ul className="mt-8 space-y-5">
                 {BENEFITS.map((b, i) => (
                   <li key={i} data-testid={`benefit-${i}`} className="flex items-center gap-4 group">
-                    <span className="w-8 h-8 bg-[#FF5A00]/10 border border-[#FF5A00]/30 flex items-center justify-center shrink-0 group-hover:bg-[#FF5A00] transition-colors duration-300">
-                      <Check className="w-4 h-4 text-[#FF5A00] group-hover:text-black transition-colors duration-300" strokeWidth={2.5} />
+                    <span className="w-8 h-8 bg-[#F2A93B]/10 border border-[#F2A93B]/30 flex items-center justify-center shrink-0 group-hover:bg-[#F2A93B] transition-colors duration-300">
+                      <Check className="w-4 h-4 text-[#F2A93B] group-hover:text-black transition-colors duration-300" strokeWidth={2.5} />
                     </span>
                     <span className="text-lg text-white">{b}</span>
                   </li>

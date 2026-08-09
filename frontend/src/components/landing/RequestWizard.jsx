@@ -69,23 +69,23 @@ export default function RequestWizard({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent data-testid="request-form-dialog" className="bg-[#111111] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto rounded-none">
+      <DialogContent data-testid="request-form-dialog" className="bg-[#26241F] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto rounded-none">
         {done ? (
           <div data-testid="request-success" className="py-14 text-center">
             <motion.span
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring", stiffness: 200, damping: 15 }}
-              className="mx-auto w-20 h-20 bg-[#FF5A00] flex items-center justify-center"
+              className="mx-auto w-20 h-20 bg-[#F2A93B] flex items-center justify-center"
             >
-              <Check className="w-10 h-10 text-white" strokeWidth={2.5} />
+              <Check className="w-10 h-10 text-[#1C1C1E]" strokeWidth={2.5} />
             </motion.span>
             <h3 className="mt-8 font-display text-3xl font-bold text-white">Richiesta inviata!</h3>
             <p className="mt-4 text-white/50 max-w-sm mx-auto">Il professionista più adatto ti ricontatterà al più presto. Tieni il telefono a portata di mano.</p>
             <button
               data-testid="request-success-close"
               onClick={() => close(false)}
-              className="mt-10 bg-[#FF5A00] text-white px-8 py-4 font-medium hover:bg-[#E04F00] transition-colors"
+              className="mt-10 bg-[#F2A93B] text-[#1C1C1E] px-8 py-4 font-medium hover:bg-[#D98E1F] transition-colors"
             >
               Chiudi
             </button>
@@ -93,7 +93,7 @@ export default function RequestWizard({ open, onOpenChange }) {
         ) : (
           <>
             <DialogHeader>
-              <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#FF5A00]">Richiesta gratuita — Varese e provincia</p>
+              <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B]">Richiesta gratuita — Varese e provincia</p>
               <DialogTitle className="font-display text-3xl font-bold text-white">Richiedi un intervento</DialogTitle>
               <DialogDescription className="text-white/50">Rispondi a poche domande: il professionista più adatto ti ricontatta al più presto.</DialogDescription>
             </DialogHeader>
@@ -101,7 +101,7 @@ export default function RequestWizard({ open, onOpenChange }) {
             <div className="mt-6 flex gap-2" data-testid="request-progress">
               {STEPS.map((label, i) => (
                 <div key={label} className="flex-1">
-                  <div data-testid={`request-progress-${i}`} className={`h-1 transition-colors duration-500 ${i <= step ? "bg-[#FF5A00]" : "bg-white/10"}`} />
+                  <div data-testid={`request-progress-${i}`} className={`h-1 transition-colors duration-500 ${i <= step ? "bg-[#F2A93B]" : "bg-white/10"}`} />
                   <p className={`mt-2 text-[10px] tracking-[0.15em] uppercase transition-colors ${i === step ? "text-white" : "text-white/30"}`}>{i + 1}. {label}</p>
                 </div>
               ))}
@@ -154,10 +154,10 @@ export default function RequestWizard({ open, onOpenChange }) {
                               data-testid={`request-tipo-${t.value.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`}
                               onClick={() => setForm({ ...form, tipo_intervento: t.value })}
                               className={`group p-4 border text-left transition-colors duration-300 ${
-                                form.tipo_intervento === t.value ? "border-[#FF5A00] bg-[#FF5A00]/10" : "border-white/15 hover:border-white/40"
+                                form.tipo_intervento === t.value ? "border-[#F2A93B] bg-[#F2A93B]/10" : "border-white/15 hover:border-white/40"
                               }`}
                             >
-                              <t.icon className={`w-5 h-5 transition-colors ${form.tipo_intervento === t.value ? "text-[#FF5A00]" : "text-white/40 group-hover:text-white/70"}`} strokeWidth={1.5} />
+                              <t.icon className={`w-5 h-5 transition-colors ${form.tipo_intervento === t.value ? "text-[#F2A93B]" : "text-white/40 group-hover:text-white/70"}`} strokeWidth={1.5} />
                               <p className={`mt-3 text-sm font-medium transition-colors ${form.tipo_intervento === t.value ? "text-white" : "text-white/60"}`}>{t.value}</p>
                             </button>
                           ))}
@@ -179,7 +179,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                               onClick={() => setForm({ ...form, urgente: o.v })}
                               className={`px-4 py-4 text-sm font-medium border transition-colors duration-300 ${
                                 form.urgente === o.v
-                                  ? o.v === "si" ? "bg-[#FF5A00] border-[#FF5A00] text-white" : "border-white bg-white/10 text-white"
+                                  ? o.v === "si" ? "bg-[#F2A93B] border-[#F2A93B] text-[#1C1C1E]" : "border-white bg-white/10 text-white"
                                   : "border-white/15 text-white/50 hover:border-white/40"
                               }`}
                             >
@@ -211,7 +211,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                       </div>
                       <div>
                         <label className="brutalist-label">Carica foto (opzionale)</label>
-                        <label data-testid="request-photo-upload" className="flex items-center gap-3 border border-dashed border-white/20 px-4 py-4 cursor-pointer hover:border-[#FF5A00] transition-colors text-white/50 text-sm">
+                        <label data-testid="request-photo-upload" className="flex items-center gap-3 border border-dashed border-white/20 px-4 py-4 cursor-pointer hover:border-[#F2A93B] transition-colors text-white/50 text-sm">
                           <Paperclip className="w-4 h-4" strokeWidth={1.5} />
                           {photo ? photo.name : "Scegli un'immagine (max 5MB)"}
                           <input type="file" accept="image/*" className="hidden" onChange={(e) => setPhoto(e.target.files[0] || null)} />
@@ -228,10 +228,10 @@ export default function RequestWizard({ open, onOpenChange }) {
                           data-testid="request-privacy-checkbox"
                           checked={privacy}
                           onChange={(e) => setPrivacy(e.target.checked)}
-                          className="mt-0.5 w-4 h-4 shrink-0 accent-[#FF5A00] cursor-pointer"
+                          className="mt-0.5 w-4 h-4 shrink-0 accent-[#F2A93B] cursor-pointer"
                         />
                         <span className="text-xs text-white/50 leading-relaxed group-hover:text-white/70 transition-colors">
-                          Ho letto e accetto la <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#FF5A00] underline underline-offset-2">Privacy Policy</a> e acconsento al trattamento dei miei dati personali per la gestione della richiesta. *
+                          Ho letto e accetto la <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="text-[#F2A93B] underline underline-offset-2">Privacy Policy</a> e acconsento al trattamento dei miei dati personali per la gestione della richiesta. *
                         </span>
                       </label>
                     </div>
@@ -256,7 +256,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                   data-testid="request-next-button"
                   type="button"
                   onClick={next}
-                  className="flex-1 bg-[#FF5A00] text-white px-8 py-4 font-medium hover:bg-[#E04F00] transition-colors inline-flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#F2A93B] text-[#1C1C1E] px-8 py-4 font-medium hover:bg-[#D98E1F] transition-colors inline-flex items-center justify-center gap-2"
                 >
                   Continua <ArrowRight className="w-4 h-4" />
                 </button>
@@ -266,7 +266,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                   type="button"
                   onClick={submit}
                   disabled={sending}
-                  className="flex-1 bg-[#FF5A00] text-white px-8 py-4 font-medium hover:bg-[#E04F00] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#F2A93B] text-[#1C1C1E] px-8 py-4 font-medium hover:bg-[#D98E1F] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
                   {sending && <Loader2 className="w-4 h-4 animate-spin" />}
                   {sending ? "Invio in corso..." : "Invia richiesta"}

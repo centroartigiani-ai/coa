@@ -4,25 +4,25 @@
 
 @layer base {
     :root {
-        --background: 0 0% 4%;
-        --foreground: 0 0% 98%;
-        --card: 0 0% 7%;
-        --card-foreground: 0 0% 98%;
-        --popover: 0 0% 7%;
-        --popover-foreground: 0 0% 98%;
-        --primary: 22 100% 50%;
-        --primary-foreground: 0 0% 100%;
-        --secondary: 0 0% 10%;
-        --secondary-foreground: 0 0% 98%;
-        --muted: 0 0% 12%;
-        --muted-foreground: 0 0% 64%;
-        --accent: 0 0% 12%;
-        --accent-foreground: 0 0% 98%;
+        --background: 240 4% 11%;
+        --foreground: 40 20% 94%;
+        --card: 40 9% 14%;
+        --card-foreground: 40 20% 94%;
+        --popover: 40 9% 14%;
+        --popover-foreground: 40 20% 94%;
+        --primary: 36 88% 59%;
+        --primary-foreground: 240 4% 11%;
+        --secondary: 40 9% 16%;
+        --secondary-foreground: 40 20% 94%;
+        --muted: 40 6% 18%;
+        --muted-foreground: 40 8% 62%;
+        --accent: 40 9% 16%;
+        --accent-foreground: 40 20% 94%;
         --destructive: 0 62.8% 50%;
-        --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 15%;
-        --input: 0 0% 20%;
-        --ring: 22 100% 50%;
+        --destructive-foreground: 40 20% 94%;
+        --border: 40 8% 20%;
+        --input: 40 8% 24%;
+        --ring: 36 88% 59%;
         --radius: 0.125rem;
     }
 }
@@ -36,18 +36,26 @@
     }
     body {
         @apply bg-background text-foreground;
-        font-family: "Satoshi", ui-sans-serif, system-ui, sans-serif;
+        font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
     ::selection {
-        background: #ff5a00;
-        color: #fff;
+        background: #f2a93b;
+        color: #1c1c1e;
     }
 }
 
 .font-display {
-    font-family: "Cabinet Grotesk", "Satoshi", ui-sans-serif, sans-serif;
+    font-family: "Space Grotesk", "Inter", ui-sans-serif, sans-serif;
+}
+
+.font-mono-data {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+.text-white {
+    color: #f5f1ea !important;
 }
 
 .noise-overlay {
@@ -61,11 +69,11 @@
 
 .text-outline {
     color: transparent;
-    -webkit-text-stroke: 1px rgba(255, 255, 255, 0.22);
+    -webkit-text-stroke: 1px rgba(245, 241, 234, 0.22);
 }
 
 .brutalist-input {
-    @apply w-full bg-transparent border-0 border-b border-white/20 rounded-none px-0 py-3 text-white placeholder:text-white/30 focus-visible:ring-0 focus-visible:border-[#FF5A00] focus:outline-none transition-colors;
+    @apply w-full bg-transparent border-0 border-b border-white/20 rounded-none px-0 py-3 text-white placeholder:text-white/30 focus-visible:ring-0 focus-visible:border-[#F2A93B] focus:outline-none transition-colors;
 }
 
 .brutalist-label {

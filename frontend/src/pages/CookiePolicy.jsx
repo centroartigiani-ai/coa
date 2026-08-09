@@ -31,22 +31,22 @@ export default function CookiePolicy() {
   };
 
   return (
-    <div data-testid="cookie-policy-page" className="min-h-screen bg-[#0A0A0A] text-white">
+    <div data-testid="cookie-policy-page" className="min-h-screen bg-[#1C1C1E] text-white">
       <header className="border-b border-white/10 bg-black/70 backdrop-blur-xl">
         <div className="px-6 md:px-12 mx-auto max-w-7xl h-20 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
-            <span className="w-9 h-9 bg-[#FF5A00] flex items-center justify-center"><Wrench className="w-4 h-4 text-black" strokeWidth={2.5} /></span>
+            <span className="w-9 h-9 bg-[#F2A93B] flex items-center justify-center"><Wrench className="w-4 h-4 text-black" strokeWidth={2.5} /></span>
             <span className="font-display font-black text-lg">COA</span>
           </a>
           <a data-testid="cookie-policy-back" href="/" className="text-sm text-white/60 hover:text-white transition-colors">← Torna al sito</a>
         </div>
       </header>
       <main className="px-6 md:px-12 mx-auto max-w-3xl py-16">
-        <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#FF5A00]">Documento legale</p>
+        <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B]">Documento legale</p>
         <h1 className="mt-4 font-display text-4xl md:text-5xl font-black tracking-tight">Cookie Policy</h1>
         <p className="mt-4 text-white/40 text-sm">Ultimo aggiornamento: 7 agosto 2026</p>
 
-        <button data-testid="cookie-renew-button" onClick={renewConsent} className="mt-8 border border-[#FF5A00] text-[#FF5A00] px-6 py-3 text-sm font-medium hover:bg-[#FF5A00] hover:text-white transition-colors">
+        <button data-testid="cookie-renew-button" onClick={renewConsent} className="mt-8 border border-[#F2A93B] text-[#F2A93B] px-6 py-3 text-sm font-medium hover:bg-[#F2A93B] hover:text-white transition-colors">
           Modifica o revoca il tuo consenso
         </button>
 

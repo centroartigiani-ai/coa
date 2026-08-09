@@ -1,23 +1,38 @@
-import { Droplets, Zap, Wrench, Building2, Factory } from "lucide-react";
+import { Wrench, Building2, Factory } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/Reveal";
+import { IconElectrician, IconPlumber } from "@/components/landing/icons";
 
 const ELECTRICAL_IMG = "https://images.pexels.com/photos/9679179/pexels-photo-9679179.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940";
 
-const Card = ({ icon: Icon, title, desc, span, image, testid, delay }) => (
-  <Reveal delay={delay} className={span}>
+const CoreCard = ({ icon: Icon, title, desc, image, testid, delay }) => (
+  <Reveal delay={delay} className="md:col-span-3">
     <div
       data-testid={testid}
-      className="group relative h-full min-h-[240px] p-8 flex flex-col justify-end overflow-hidden bg-[#111111] border border-white/10 hover:border-white/30 transition-colors duration-500 hover:scale-[1.01]"
+      className="group relative h-full min-h-[320px] p-8 md:p-10 flex flex-col justify-end overflow-hidden bg-[#26241F] border border-[#F2A93B]/40 hover:border-[#F2A93B] transition-colors duration-500"
     >
       {image && (
         <>
-          <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-700" />
-          <div className="absolute inset-0 bg-black/40" />
+          <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:opacity-50 transition-opacity duration-700" />
+          <div className="absolute inset-0 bg-[#1C1C1E]/50" />
         </>
       )}
-      <Icon className="relative w-7 h-7 mb-auto text-[#FF5A00]" strokeWidth={1.5} />
-      <h3 className="relative mt-10 font-display text-xl sm:text-2xl font-bold text-white">{title}</h3>
-      <p className="relative mt-2 text-sm text-white/50">{desc}</p>
+      <span className="absolute top-6 right-6 font-mono-data text-[10px] tracking-[0.25em] uppercase text-[#F2A93B]">Servizio core</span>
+      <Icon className="relative w-12 h-12 mb-auto text-[#F2A93B]" />
+      <h3 className="relative mt-12 font-display text-2xl sm:text-3xl font-bold text-[#F5F1EA]">{title}</h3>
+      <p className="relative mt-3 text-sm text-[#F5F1EA]/55 max-w-sm">{desc}</p>
+    </div>
+  </Reveal>
+);
+
+const Card = ({ icon: Icon, title, desc, testid, delay }) => (
+  <Reveal delay={delay} className="md:col-span-2">
+    <div
+      data-testid={testid}
+      className="group relative h-full min-h-[220px] p-8 flex flex-col justify-end bg-[#26241F] border border-[#F5F1EA]/10 hover:border-[#F5F1EA]/30 transition-colors duration-500"
+    >
+      <Icon className="w-7 h-7 mb-auto text-[#F2A93B]" strokeWidth={1.5} />
+      <h3 className="mt-10 font-display text-xl sm:text-2xl font-bold text-[#F5F1EA]">{title}</h3>
+      <p className="mt-2 text-sm text-[#F5F1EA]/50">{desc}</p>
     </div>
   </Reveal>
 );
@@ -25,13 +40,13 @@ const Card = ({ icon: Icon, title, desc, span, image, testid, delay }) => (
 export default function Services() {
   return (
     <section id="servizi" data-testid="services-section" className="py-24 md:py-32 px-6 md:px-12 mx-auto max-w-7xl">
-      <SectionHeading number="03" label="Servizi" title={<>Cinque specialità, <span className="text-[#FF5A00]">un solo interlocutore.</span></>} />
+      <SectionHeading number="03" label="Servizi" title={<>Cinque specialità, <span className="text-[#F2A93B]">un solo interlocutore.</span></>} />
       <div className="mt-16 grid grid-cols-1 md:grid-cols-6 gap-4">
-        <Card testid="service-card-idraulico" icon={Droplets} title="Idraulico" desc="Perdite, scarichi, sanitari e impianti idrici." span="md:col-span-2" delay={0} />
-        <Card testid="service-card-elettricista" icon={Zap} title="Elettricista" desc="Impianti elettrici, quadri, cortocircuiti e messa a norma." span="md:col-span-2" image={ELECTRICAL_IMG} delay={0.1} />
-        <Card testid="service-card-piccole-manutenzioni" icon={Wrench} title="Piccole manutenzioni" desc="Riparazioni domestiche rapide, senza attese infinite." span="md:col-span-2" delay={0.2} />
-        <Card testid="service-card-condomini" icon={Building2} title="Servizi per condomini" desc="Gestione veloce delle richieste comuni e delle parti condivise." span="md:col-span-3" delay={0} />
-        <Card testid="service-card-aziende" icon={Factory} title="Servizi per aziende" desc="Manutenzione programmata e interventi tempestivi per il tuo business." span="md:col-span-3" delay={0.1} />
+        <CoreCard testid="service-card-idraulico" icon={IconPlumber} title="Idraulico" desc="Perdite, scarichi, sanitari e impianti idrici. Il nostro servizio più richiesto, con artigiani sempre disponibili in zona." delay={0} />
+        <CoreCard testid="service-card-elettricista" icon={IconElectrician} title="Elettricista" desc="Impianti elettrici, quadri, cortocircuiti e messa a norma. Interventi sicuri e tracciati dall'inizio alla fine." image={ELECTRICAL_IMG} delay={0.1} />
+        <Card testid="service-card-piccole-manutenzioni" icon={Wrench} title="Piccole manutenzioni" desc="Riparazioni domestiche rapide, senza attese infinite." delay={0} />
+        <Card testid="service-card-condomini" icon={Building2} title="Servizi per condomini" desc="Gestione veloce delle richieste comuni e delle parti condivise." delay={0.1} />
+        <Card testid="service-card-aziende" icon={Factory} title="Servizi per aziende" desc="Manutenzione programmata e interventi tempestivi per il tuo business." delay={0.2} />
       </div>
     </section>
   );

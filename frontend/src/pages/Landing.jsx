@@ -18,7 +18,7 @@ export default function Landing() {
   const [partnerOpen, setPartnerOpen] = useState(false);
 
   return (
-    <div data-testid="landing-page" className="bg-[#0A0A0A] text-white min-h-screen">
+    <div data-testid="landing-page" className="bg-[#1C1C1E] text-white min-h-screen">
       <div className="noise-overlay" />
       <Navbar onRequest={() => setRequestOpen(true)} />
       <Hero onRequest={() => setRequestOpen(true)} onPartner={() => setPartnerOpen(true)} />

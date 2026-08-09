@@ -9,24 +9,24 @@ const Section = ({ title, children }) => (
 
 export default function PrivacyPolicy() {
   return (
-    <div data-testid="privacy-policy-page" className="min-h-screen bg-[#0A0A0A] text-white">
+    <div data-testid="privacy-policy-page" className="min-h-screen bg-[#1C1C1E] text-white">
       <header className="border-b border-white/10 bg-black/70 backdrop-blur-xl">
         <div className="px-6 md:px-12 mx-auto max-w-7xl h-20 flex items-center justify-between">
           <a href="/" className="flex items-center gap-3">
-            <span className="w-9 h-9 bg-[#FF5A00] flex items-center justify-center"><Wrench className="w-4 h-4 text-black" strokeWidth={2.5} /></span>
+            <span className="w-9 h-9 bg-[#F2A93B] flex items-center justify-center"><Wrench className="w-4 h-4 text-black" strokeWidth={2.5} /></span>
             <span className="font-display font-black text-lg">COA</span>
           </a>
           <a data-testid="privacy-policy-back" href="/" className="text-sm text-white/60 hover:text-white transition-colors">← Torna al sito</a>
         </div>
       </header>
       <main className="px-6 md:px-12 mx-auto max-w-3xl py-16">
-        <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#FF5A00]">Documento legale — GDPR (UE) 2016/679</p>
+        <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B]">Documento legale — GDPR (UE) 2016/679</p>
         <h1 className="mt-4 font-display text-4xl md:text-5xl font-black tracking-tight">Privacy Policy</h1>
         <p className="mt-4 text-white/40 text-sm">Ultimo aggiornamento: 7 agosto 2026</p>
 
         <Section title="1. Titolare del trattamento">
           <p>Il titolare del trattamento è <strong className="text-white">COA — Centrale Operativa Artigiani</strong> (ragione sociale e partita IVA: da completare a cura del titolare), operativo in Varese e provincia.</p>
-          <p>Contatti del titolare: email <a href="mailto:centro.artigiani@gmail.com" className="text-[#FF5A00] underline underline-offset-2">centro.artigiani@gmail.com</a> — telefono <a href="tel:+393520248313" className="text-[#FF5A00] underline underline-offset-2">+39 352 024 8313</a>.</p>
+          <p>Contatti del titolare: email <a href="mailto:centro.artigiani@gmail.com" className="text-[#F2A93B] underline underline-offset-2">centro.artigiani@gmail.com</a> — telefono <a href="tel:+393520248313" className="text-[#F2A93B] underline underline-offset-2">+39 352 024 8313</a>.</p>
         </Section>
 
         <Section title="2. Dati personali raccolti">
@@ -69,7 +69,7 @@ export default function PrivacyPolicy() {
         </Section>
 
         <Section title="8. Diritti dell'interessato">
-          <p>Puoi esercitare in qualsiasi momento i diritti previsti dagli artt. 15-22 GDPR: accesso, rettifica, cancellazione, limitazione, portabilità, opposizione e revoca del consenso. Scrivi a <a href="mailto:centro.artigiani@gmail.com" className="text-[#FF5A00] underline underline-offset-2">centro.artigiani@gmail.com</a>: risponderemo entro 30 giorni.</p>
+          <p>Puoi esercitare in qualsiasi momento i diritti previsti dagli artt. 15-22 GDPR: accesso, rettifica, cancellazione, limitazione, portabilità, opposizione e revoca del consenso. Scrivi a <a href="mailto:centro.artigiani@gmail.com" className="text-[#F2A93B] underline underline-offset-2">centro.artigiani@gmail.com</a>: risponderemo entro 30 giorni.</p>
           <p>Hai inoltre diritto di reclamo al <strong className="text-white">Garante per la protezione dei dati personali</strong> (www.garanteprivacy.it).</p>
         </Section>
 

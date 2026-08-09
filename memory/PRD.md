@@ -35,6 +35,13 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 - Foto allegata alle email di notifica (Resend attachments) — attivo e testato
 - Notifiche WhatsApp via CallMeBot ATTIVE (09/08/2026): a ogni richiesta/candidatura arriva un messaggio WhatsApp al +39 352 0248313 con dettagli e link pubblico alla foto (endpoint GET /api/public/requests/{id}/photo). Chiave CALLMEBOT_APIKEY in backend/.env. Servizio non ufficiale — possibili limiti/interruzioni
 - GDPR (08/08/2026): Cookiebot integrato (ID in REACT_APP_COOKIEBOT_ID in frontend/.env — basta inserire l'ID dominio); PostHog bloccato fino a consenso (type=text/plain + data-cookieconsent=statistics); banner fallback custom Accetta/Rifiuta se Cookiebot non configurato; pagine /privacy-policy (GDPR completa, ragione sociale/P.IVA da completare) e /cookie-policy (con Cookie Declaration embed + pulsante revoca consenso); checkbox consenso privacy obbligatoria (non preselezionata) in entrambi i moduli; backend richiede campo privacy=true e registra privacy_accepted_at
+- Restyling (09/08/2026): palette grafite calda #1C1C1E / charcoal #26241F / arancio cantiere #F2A93B / verde fiducia #4CAF7D / testo bianco caldo #F5F1EA; font Space Grotesk (titoli) + Inter (corpo) + IBM Plex Mono (dati); hero con dial "15 min di risposta" animato + chip Elettricista/Idraulico con icone SVG custom; card Idraulico/Elettricista in evidenza ("Servizio core"); animazioni ridotte; area admin mantiene il tema precedente
+
+## In coda (approvato dall'utente, in attesa di risposte a 3 quesiti)
+1. Dashboard artigiani con login proprio + onboarding/verifica (quesito: come ricevono le credenziali — password in candidatura vs admin-created)
+2. Assegnazione automatica richieste → partner per zona/professione con priorità Premium (quesito: comportamento se nessun match)
+3. Email di conferma automatica al cliente ("ricontattato entro 15 minuti") — limite: Resend test invia solo a centro.artigiani@gmail.com finché non si verifica un dominio
+4. Recensioni pubbliche post-intervento (quesito: moderazione admin sì/no); invito via link al completamento
 
 ## Da completare / note
 - P1: verifica dominio su Resend per notifiche a qualsiasi indirizzo e mittente brandizzato (es. noreply@coa-varese.it)

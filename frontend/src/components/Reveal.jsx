@@ -30,8 +30,8 @@ export const MaskedLine = ({ children, delay = 0, className = "" }) => (
 export const SectionHeading = ({ number, label, title, className = "" }) => (
   <div className={className}>
     <Reveal>
-      <p data-testid={`section-label-${number}`} className="text-xs font-bold tracking-[0.3em] uppercase text-[#FF5A00] mb-6 flex items-center gap-3">
-        <span className="inline-block w-10 h-px bg-[#FF5A00]" />
+      <p data-testid={`section-label-${number}`} className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B] mb-6 flex items-center gap-3">
+        <span className="inline-block w-10 h-px bg-[#F2A93B]" />
         {number} — {label}
       </p>
     </Reveal>
