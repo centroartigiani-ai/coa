@@ -21,7 +21,8 @@ const FLOW = [
 
 export default function PartnerSection({ onPartner }) {
   return (
-    <section id="partner" data-testid="partner-section" className="py-24 md:py-32 px-6 md:px-12 mx-auto max-w-7xl">
+    <section id="partner" data-testid="partner-section" className="bg-[#26241F] border-y border-[#F5F1EA]/10">
+      <div className="py-24 md:py-32 px-6 md:px-12 mx-auto max-w-7xl">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
         <div>
           <SectionHeading number="05" label="Diventa partner" title={<>Sei un artigiano? <span className="text-[#F2A93B]">Lavora con noi.</span></>} />
@@ -56,7 +57,7 @@ export default function PartnerSection({ onPartner }) {
         <Reveal delay={0.2}>
           <div className="relative">
             <div className="absolute -bottom-4 -right-4 w-full h-full border border-[#F2A93B]/40" />
-            <img data-testid="partner-image" src={PARTNER_IMG} alt="Progetto di un artigiano" className="relative w-full h-[420px] object-cover border border-white/10 grayscale hover:grayscale-0 transition-all duration-700" />
+            <img data-testid="partner-image" src={PARTNER_IMG} alt="Artigiano partner COA al lavoro su un progetto a Varese" className="relative w-full h-[420px] object-cover border border-white/10 grayscale hover:grayscale-0 transition-all duration-700" />
           </div>
         </Reveal>
       </div>
@@ -79,6 +80,7 @@ export default function PartnerSection({ onPartner }) {
             </Reveal>
           ))}
         </div>
+      </div>
       </div>
     </section>
   );

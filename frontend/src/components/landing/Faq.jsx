@@ -5,7 +5,7 @@ const FAQS = [
   { q: "Quanto tempo serve per essere ricontattati?", a: "Il prima possibile: analizziamo subito la tua richiesta e il professionista più adatto ti contatta direttamente." },
   { q: "Gli artigiani sono verificati?", a: "Sì, selezioniamo attentamente ogni professionista prima di inserirlo nella rete COA." },
   { q: "Quanto costa richiedere un intervento?", a: "La richiesta è gratuita. Riceverai il contatto del professionista più adatto senza alcun costo." },
-  { q: "Posso richiedere interventi urgenti?", a: "Sì, gestiamo anche richieste urgenti: segnalalo nel modulo e daremo priorità alla tua richiesta." },
+  { q: "Gestite anche pronto intervento idraulico o elettrico urgente a Varese?", a: "Sì: segnala l'urgenza nel modulo e daremo priorità alla tua richiesta, a Varese e in tutta la provincia." },
   { q: "Posso diventare partner?", a: "Sì. Se sei un professionista puoi candidarti tramite il modulo dedicato nella sezione Partner." },
 ];
 

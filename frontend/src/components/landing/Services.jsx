@@ -12,7 +12,7 @@ const CoreCard = ({ icon: Icon, title, desc, image, testid, delay }) => (
     >
       {image && (
         <>
-          <img src={image} alt={title} className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:opacity-50 transition-opacity duration-700" />
+          <img src={image} alt={title === "Elettricista" ? "Elettricista al lavoro su un quadro elettrico a Varese" : title} className="absolute inset-0 w-full h-full object-cover opacity-35 group-hover:opacity-50 transition-opacity duration-700" />
           <div className="absolute inset-0 bg-[#1C1C1E]/50" />
         </>
       )}
@@ -40,13 +40,13 @@ const Card = ({ icon: Icon, title, desc, testid, delay }) => (
 export default function Services() {
   return (
     <section id="servizi" data-testid="services-section" className="py-24 md:py-32 px-6 md:px-12 mx-auto max-w-7xl">
-      <SectionHeading number="03" label="Servizi" title={<>Cinque specialità, <span className="text-[#F2A93B]">un solo interlocutore.</span></>} />
+      <SectionHeading number="03" label="Servizi" title={<>Idraulico, elettricista e manutenzioni <span className="text-[#F2A93B]">a Varese.</span></>} />
       <div className="mt-16 grid grid-cols-1 md:grid-cols-6 gap-4">
-        <CoreCard testid="service-card-idraulico" icon={IconPlumber} title="Idraulico" desc="Perdite, scarichi, sanitari e impianti idrici. Il nostro servizio più richiesto, con artigiani sempre disponibili in zona." delay={0} />
-        <CoreCard testid="service-card-elettricista" icon={IconElectrician} title="Elettricista" desc="Impianti elettrici, quadri, cortocircuiti e messa a norma. Interventi sicuri e tracciati dall'inizio alla fine." image={ELECTRICAL_IMG} delay={0.1} />
-        <Card testid="service-card-piccole-manutenzioni" icon={Wrench} title="Piccole manutenzioni" desc="Riparazioni domestiche rapide, senza attese infinite." delay={0} />
-        <Card testid="service-card-condomini" icon={Building2} title="Servizi per condomini" desc="Gestione veloce delle richieste comuni e delle parti condivise." delay={0.1} />
-        <Card testid="service-card-aziende" icon={Factory} title="Servizi per aziende" desc="Manutenzione programmata e interventi tempestivi per il tuo business." delay={0.2} />
+        <CoreCard testid="service-card-idraulico" icon={IconPlumber} title="Idraulico" desc="Pronto intervento idraulico a Varese e provincia: perdite d'acqua, scarichi, sanitari e impianti idrici." delay={0} />
+        <CoreCard testid="service-card-elettricista" icon={IconElectrician} title="Elettricista" desc="Pronto intervento elettrico a Varese: guasti elettrici, quadri, cortocircuiti e messa a norma." image={ELECTRICAL_IMG} delay={0.1} />
+        <Card testid="service-card-piccole-manutenzioni" icon={Wrench} title="Piccole manutenzioni" desc="Riparazioni domestiche a Varese, con il tuo artigiano di fiducia." delay={0} />
+        <Card testid="service-card-condomini" icon={Building2} title="Servizi per condomini" desc="Manutenzione condominio a Varese: un referente unico per gli amministratori." delay={0.1} />
+        <Card testid="service-card-aziende" icon={Factory} title="Servizi per aziende" desc="Manutenzione impianti aziendali a Varese e pronto intervento tecnico." delay={0.2} />
       </div>
     </section>
   );

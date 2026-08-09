@@ -36,6 +36,9 @@ export default function Footer({ onPartner }) {
             <a data-testid="footer-email" href="mailto:centro.artigiani@gmail.com" className="mt-3 flex items-center gap-3 text-white/70 hover:text-[#F2A93B] transition-colors">
               <Mail className="w-4 h-4" strokeWidth={1.5} /> centro.artigiani@gmail.com
             </a>
+            <p className="mt-6 text-xs text-white/30 leading-relaxed max-w-[280px]">
+              Idraulico ed elettricista a Varese, Busto Arsizio, Gallarate, Saronno e in tutta la provincia.
+            </p>
             <div className="mt-8 flex gap-6">
               <a data-testid="footer-privacy" href="/privacy-policy" className="text-sm text-white/40 hover:text-white transition-colors">Privacy Policy</a>
               <a data-testid="footer-cookie" href="/cookie-policy" className="text-sm text-white/40 hover:text-white transition-colors">Cookie Policy</a>

@@ -2,9 +2,9 @@ import { Home, Building2, Factory } from "lucide-react";
 import { Reveal, SectionHeading } from "@/components/Reveal";
 
 const AUDIENCES = [
-  { icon: Home, title: "Privati", text: "Interventi domestici rapidi e affidabili, dal rubinetto che perde al quadro elettrico." },
-  { icon: Building2, title: "Condomini", text: "Gestione veloce delle richieste comuni, con un unico interlocutore per l'amministratore." },
-  { icon: Factory, title: "Aziende", text: "Manutenzione programmata e interventi tempestivi per non fermare mai la tua attività." },
+  { icon: Home, title: "Privati", text: "Manutenzione casa a Varese: interventi domestici rapidi e affidabili, dal rubinetto che perde al quadro elettrico." },
+  { icon: Building2, title: "Condomini", text: "L'artigiano per amministratori di condominio a Varese: gestione veloce delle richieste comuni con un unico interlocutore." },
+  { icon: Factory, title: "Aziende", text: "Manutenzione impianti aziendali e pronto intervento tecnico per aziende a Varese e provincia." },
 ];
 
 export default function Audiences() {
