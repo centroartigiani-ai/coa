@@ -58,7 +58,7 @@ export default function Hero({ onRequest, onPartner }) {
             <MaskedLine delay={0.35}>Idraulico o elettricista</MaskedLine>
             <MaskedLine delay={0.5}>a Varese?</MaskedLine>
             <MaskedLine delay={0.65}>
-              <span className="text-[#F2A93B]">Ti mettiamo in contatto in fretta.</span>
+              <span className="text-[#F2A93B]">Chiama la Centrale.</span>
             </MaskedLine>
           </h1>
 
