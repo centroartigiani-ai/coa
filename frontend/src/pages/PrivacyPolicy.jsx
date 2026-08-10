@@ -33,6 +33,8 @@ export default function PrivacyPolicy() {
           <p>Tramite il modulo "Richiedi un intervento": nome, cognome, telefono, email, indirizzo, tipo di intervento, descrizione del problema, eventuale fotografia del danno caricata volontariamente.</p>
           <p>Tramite il modulo "Diventa Partner": nome, cognome, ragione sociale, partita IVA, telefono, email, professione, zone coperte, anni di esperienza, messaggio libero, eventuale CV o visura camerale caricata volontariamente.</p>
           <p>Tramite la navigazione: dati tecnici di connessione (indirizzo IP, browser) e — solo previo consenso — statistiche di utilizzo aggregate. Non raccogliamo categorie particolari di dati (art. 9 GDPR).</p>
+          <p>Per i partner approvati: credenziali di accesso all'area riservata (la password è conservata esclusivamente in forma cifrata con hashing bcrypt e non è mai visibile in chiaro).</p>
+          <p>Tramite il sistema di recensioni: nome (o iniziali), voto e testo della recensione, pubblicati sul sito <strong className="text-white">solo previa moderazione</strong> da parte del titolare.</p>
         </Section>
 
         <Section title="3. Finalità e base giuridica">
@@ -41,6 +43,8 @@ export default function PrivacyPolicy() {
             <li><strong className="text-white">Valutazione delle candidature partner</strong>: verifica dei requisiti professionali — base giuridica: misure precontrattuali (art. 6.1.b);</li>
             <li><strong className="text-white">Obblighi di legge e tutela dei diritti</strong> — base giuridica: obbligo legale (art. 6.1.c) e legittimo interesse (art. 6.1.f);</li>
             <li><strong className="text-white">Statistiche di utilizzo del sito</strong> — base giuridica: consenso (art. 6.1.a), revocabile in qualsiasi momento.</li>
+            <li><strong className="text-white">Gestione dell'area riservata partner</strong>: autenticazione e assegnazione degli interventi — base giuridica: esecuzione del rapporto contrattuale (art. 6.1.b);</li>
+            <li><strong className="text-white">Pubblicazione delle recensioni</strong> sul sito, previa moderazione — base giuridica: consenso (art. 6.1.a), revocabile con richiesta di rimozione.</li>
           </ul>
         </Section>
 
