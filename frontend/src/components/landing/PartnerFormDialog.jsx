@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api, formatApiError } from "@/lib/api";
+import { getRecaptchaToken } from "@/lib/recaptcha";
 
 const PROFESSIONI = ["Idraulico", "Elettricista", "Piccole manutenzioni", "Altro"];
 const ESPERIENZA = ["0-2 anni", "3-5 anni", "6-10 anni", "Oltre 10 anni"];
@@ -29,10 +30,12 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
     }
     setSending(true);
     try {
+      const recaptchaToken = await getRecaptchaToken("candidatura_partner");
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       fd.append("privacy", "true");
       if (file) fd.append("attachment", file);
+      if (recaptchaToken) fd.append("recaptcha_token", recaptchaToken);
       await api.post("/partners", fd);
       toast.success("Candidatura inviata! Ti ricontatteremo presto.");
       setForm(INITIAL);
