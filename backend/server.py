@@ -83,7 +83,7 @@ async def verify_recaptcha(token: str | None, action: str):
         raise HTTPException(status_code=400, detail="Verifica anti-spam non riuscita, riprova")
     score = result.get("score", 0)
     if not result.get("success") or score < 0.5:
-        logger.warning("reCAPTCHA respinto (action=%s, score=%s, errors=%s)", action, score, result.get("error-codes"))
+        logger.warning("reCAPTCHA respinto (action=%s, score=%s, errors=%s, hostname=%s, success=%s)", action, score, result.get("error-codes"), result.get("hostname"), result.get("success"))
         raise HTTPException(status_code=400, detail="Verifica anti-spam non superata, riprova")
     if result.get("action") and result.get("action") != action:
         logger.warning("reCAPTCHA action mismatch: atteso=%s ricevuto=%s", action, result.get("action"))
