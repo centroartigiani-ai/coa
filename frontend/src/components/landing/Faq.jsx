@@ -14,7 +14,7 @@ export default function Faq() {
     <section id="faq" data-testid="faq-section" className="py-24 md:py-32 px-6 md:px-12 mx-auto max-w-7xl">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
         <div className="lg:col-span-5">
-          <SectionHeading number="07" label="Domande frequenti" title={<>Tutto chiaro, <span className="text-[#F2A93B]">prima ancora di chiedere.</span></>} />
+          <SectionHeading number="08" label="Domande frequenti" title={<>Tutto chiaro, <span className="text-[#F2A93B]">prima ancora di chiedere.</span></>} />
         </div>
         <Reveal delay={0.15} className="lg:col-span-7">
           <Accordion type="single" collapsible data-testid="faq-accordion">

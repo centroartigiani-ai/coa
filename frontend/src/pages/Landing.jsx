@@ -7,6 +7,7 @@ import Services from "@/components/landing/Services";
 import Audiences from "@/components/landing/Audiences";
 import PartnerSection from "@/components/landing/PartnerSection";
 import Areas from "@/components/landing/Areas";
+import Reviews from "@/components/landing/Reviews";
 import Faq from "@/components/landing/Faq";
 import Footer from "@/components/landing/Footer";
 import RequestFormDialog from "@/components/landing/RequestWizard";
@@ -29,6 +30,7 @@ export default function Landing() {
       <Audiences />
       <PartnerSection onPartner={() => setPartnerOpen(true)} />
       <Areas />
+      <Reviews />
       <Faq />
       <Footer onPartner={() => setPartnerOpen(true)} />
       <RequestFormDialog open={requestOpen} onOpenChange={setRequestOpen} />

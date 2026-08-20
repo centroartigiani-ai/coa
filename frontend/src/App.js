@@ -6,6 +6,9 @@ import { AuthProvider } from "@/context/AuthContext";
 import Landing from "@/pages/Landing";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
+import PartnerLogin from "@/pages/PartnerLogin";
+import PartnerDashboard from "@/pages/PartnerDashboard";
+import ReviewPage from "@/pages/ReviewPage";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import CookiePolicy from "@/pages/CookiePolicy";
 import CookieConsent from "@/components/CookieConsent";
@@ -22,6 +25,9 @@ function App() {
               <Route path="/cookie-policy" element={<CookiePolicy />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/partner/login" element={<PartnerLogin />} />
+              <Route path="/partner" element={<PartnerDashboard />} />
+              <Route path="/recensione/:token" element={<ReviewPage />} />
             </Routes>
             <CookieConsent />
           </BrowserRouter>
