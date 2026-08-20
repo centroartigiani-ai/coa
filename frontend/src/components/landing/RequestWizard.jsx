@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Building2, Check, Droplets, Factory, Loader2, Pa
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { api, formatApiError } from "@/lib/api";
+import { getRecaptchaToken } from "@/lib/recaptcha";
 
 const TYPES = [
   { value: "Idraulico", icon: Droplets },
@@ -52,10 +53,12 @@ export default function RequestWizard({ open, onOpenChange }) {
     }
     setSending(true);
     try {
+      const recaptchaToken = await getRecaptchaToken("richiesta_intervento");
       const fd = new FormData();
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       fd.append("privacy", "true");
       if (photo) fd.append("photo", photo);
+      if (recaptchaToken) fd.append("recaptcha_token", recaptchaToken);
       await api.post("/requests", fd);
       setDone(true);
       setForm(INITIAL);

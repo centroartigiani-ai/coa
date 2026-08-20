@@ -25,6 +25,11 @@ try:
 except ImportError:
     resend = None
 
+try:
+    import requests as _requests_sync
+except ImportError:
+    _requests_sync = None
+
 mongo_url = os.environ["MONGO_URL"]
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ["DB_NAME"]]
@@ -38,6 +43,51 @@ logger = logging.getLogger("coa")
 JWT_ALGORITHM = "HS256"
 STATUSES = ["nuova", "in_lavorazione", "completata"]
 MAX_UPLOAD = 5 * 1024 * 1024
+
+# Tipi MIME consentiti per gli upload (verificati sui byte reali, non solo estensione/Content-Type dichiarato)
+ALLOWED_UPLOAD_MIME = {
+    "image/jpeg": [b"\xff\xd8\xff"],
+    "image/png": [b"\x89PNG\r\n\x1a\n"],
+    "application/pdf": [b"%PDF-"],
+}
+
+
+def sniff_mime(data: bytes) -> str | None:
+    for mime, signatures in ALLOWED_UPLOAD_MIME.items():
+        for sig in signatures:
+            if data.startswith(sig):
+                return mime
+    return None
+
+
+async def verify_recaptcha(token: str | None, action: str):
+    secret = os.environ.get("RECAPTCHA_SECRET_KEY")
+    if not secret:
+        logger.warning("RECAPTCHA_SECRET_KEY non configurata: verifica saltata (%s)", action)
+        return
+    if not token:
+        raise HTTPException(status_code=400, detail="Verifica anti-spam mancante")
+    if _requests_sync is None:
+        logger.error("Libreria requests non disponibile: impossibile verificare reCAPTCHA")
+        raise HTTPException(status_code=500, detail="Errore di configurazione del server")
+    try:
+        resp = await asyncio.to_thread(
+            _requests_sync.post,
+            "https://www.google.com/recaptcha/api/siteverify",
+            data={"secret": secret, "response": token},
+            timeout=10,
+        )
+        result = resp.json()
+    except Exception as e:
+        logger.error("Verifica reCAPTCHA fallita (errore rete): %s", e)
+        raise HTTPException(status_code=400, detail="Verifica anti-spam non riuscita, riprova")
+    score = result.get("score", 0)
+    if not result.get("success") or score < 0.5:
+        logger.warning("reCAPTCHA respinto (action=%s, score=%s, errors=%s)", action, score, result.get("error-codes"))
+        raise HTTPException(status_code=400, detail="Verifica anti-spam non superata, riprova")
+    if result.get("action") and result.get("action") != action:
+        logger.warning("reCAPTCHA action mismatch: atteso=%s ricevuto=%s", action, result.get("action"))
+        raise HTTPException(status_code=400, detail="Verifica anti-spam non valida")
 
 
 def hash_password(password: str) -> str:
@@ -198,7 +248,10 @@ async def read_upload(file):
     data = await file.read()
     if len(data) > MAX_UPLOAD:
         raise HTTPException(status_code=400, detail="File troppo grande (max 5MB)")
-    return {"filename": file.filename, "content_type": file.content_type or "application/octet-stream",
+    real_mime = sniff_mime(data)
+    if real_mime is None:
+        raise HTTPException(status_code=400, detail="Formato file non consentito (solo JPG, PNG o PDF)")
+    return {"filename": file.filename, "content_type": real_mime,
             "data": base64.b64encode(data).decode()}
 
 
@@ -208,9 +261,11 @@ async def create_request(
     indirizzo: str = Form(...), tipo_intervento: str = Form(...),
     descrizione: str = Form(...), urgente: str = Form("no"), comune: str = Form(""),
     privacy: str = Form(...), photo: UploadFile | None = File(None),
+    recaptcha_token: str | None = Form(None),
 ):
     if privacy != "true":
         raise HTTPException(status_code=400, detail="Consenso privacy obbligatorio")
+    await verify_recaptcha(recaptcha_token, "richiesta_intervento")
     doc = {
         "id": str(uuid.uuid4()),
         "nome": nome, "cognome": cognome, "telefono": telefono, "email": email,
@@ -249,9 +304,11 @@ async def create_partner(
     partita_iva: str = Form(...), telefono: str = Form(...), email: str = Form(...),
     professione: str = Form(...), zone_coperte: str = Form(...), anni_esperienza: str = Form(...),
     messaggio: str = Form(""), privacy: str = Form(...), attachment: UploadFile | None = File(None),
+    recaptcha_token: str | None = Form(None),
 ):
     if privacy != "true":
         raise HTTPException(status_code=400, detail="Consenso privacy obbligatorio")
+    await verify_recaptcha(recaptcha_token, "candidatura_partner")
     doc = {
         "id": str(uuid.uuid4()),
         "nome": nome, "cognome": cognome, "ragione_sociale": ragione_sociale,
@@ -376,11 +433,41 @@ async def root():
 
 app.include_router(api_router)
 
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+    response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; img-src 'self' data: https:; "
+        "script-src 'self' https://www.google.com https://www.gstatic.com; "
+        "frame-src https://www.google.com; connect-src 'self' https:; "
+        "style-src 'self' 'unsafe-inline'; base-uri 'self'; frame-ancestors 'none'"
+    )
+    return response
+
+
+cors_origins_raw = os.environ.get("CORS_ORIGINS", "").strip()
+if not cors_origins_raw or cors_origins_raw == "*":
+    # Con allow_credentials=True un wildcard è pericoloso (e i browser lo rifiutano comunque
+    # per le richieste con cookie): richiediamo un elenco esplicito di origini in produzione.
+    logger.warning(
+        "CORS_ORIGINS non impostata correttamente (mancante o '*'): nessuna origine cross-site "
+        "sarà autorizzata finché non si imposta una lista esplicita di domini nel .env"
+    )
+    cors_origins = []
+else:
+    cors_origins = [o.strip() for o in cors_origins_raw.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get("CORS_ORIGINS", "*").split(","),
-    allow_methods=["*"],
+    allow_origins=cors_origins,
+    allow_methods=["GET", "POST", "PATCH", "DELETE"],
     allow_headers=["*"],
 )
 
