@@ -22,12 +22,14 @@ export default function PartnerDashboard() {
   const { user, logout } = useAuth();
   const [me, setMe] = useState(null);
   const [assignments, setAssignments] = useState([]);
+  const [waKey, setWaKey] = useState("");
+  const [waSaving, setWaSaving] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user || user.role !== "partner") return;
     Promise.all([api.get("/partner/me"), api.get("/partner/assignments")])
-      .then(([m, a]) => { setMe(m.data); setAssignments(a.data); })
+      .then(([m, a]) => { setMe(m.data); setAssignments(a.data); setWaKey(m.data?.user?.whatsapp_apikey || ""); })
       .catch(() => toast.error("Errore nel caricamento dei dati"))
       .finally(() => setLoading(false));
   }, [user]);
@@ -40,8 +42,20 @@ export default function PartnerDashboard() {
   const approved = me?.user?.approved;
   const premium = me?.user?.premium;
 
-  const act = async (rid, status) => {
+  const saveWa = async () => {
+    setWaSaving(true);
     try {
+      await api.patch("/partner/whatsapp", { apikey: waKey });
+      setMe((m) => ({ ...m, user: { ...m.user, whatsapp_apikey: waKey.trim() } }));
+      toast.success(waKey.trim() ? "Notifiche WhatsApp attivate" : "Notifiche WhatsApp disattivate");
+    } catch (err) {
+      toast.error(formatApiError(err.response?.data?.detail));
+    } finally {
+      setWaSaving(false);
+    }
+  };
+
+  const act = async (rid, status) => {    try {
       await api.patch(`/partner/assignments/${rid}`, { status });
       setAssignments((as) => as.map((a) => (a.id === rid ? { ...a, assignment_status: status } : a)));
       toast.success(status === "accettata" ? "Richiesta presa in carico" : "Intervento completato. Grazie!");
@@ -86,6 +100,41 @@ export default function PartnerDashboard() {
                   <Star className="w-4 h-4" fill="currentColor" /> Premium
                 </span>
               )}
+            </div>
+
+            <div data-testid="whatsapp-settings" className="mt-8 border border-[#F5F1EA]/10 bg-[#26241F] p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <MessageCircle className="w-5 h-5 text-[#25D366]" />
+                  <p className="font-display font-bold">Notifiche WhatsApp</p>
+                </div>
+                <span data-testid="whatsapp-status" className={`text-[10px] font-bold tracking-widest uppercase border px-2 py-1 ${
+                  me?.user?.whatsapp_apikey ? "text-[#4CAF7D] border-[#4CAF7D]/40 bg-[#4CAF7D]/10" : "text-[#F5F1EA]/40 border-[#F5F1EA]/20"
+                }`}>
+                  {me?.user?.whatsapp_apikey ? "Attive" : "Non attive"}
+                </span>
+              </div>
+              <p className="mt-3 text-sm text-[#F5F1EA]/55 leading-relaxed">
+                Ricevi un messaggio istantaneo a ogni intervento assegnato. Per attivarle: manda "I allow callmebot to send me messages" al numero +34 644 51 95 23 su WhatsApp, poi incolla qui la apikey che ricevi.
+              </p>
+              <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                <input
+                  data-testid="whatsapp-apikey-input"
+                  value={waKey}
+                  onChange={(e) => setWaKey(e.target.value)}
+                  placeholder="La tua apikey CallMeBot"
+                  className="brutalist-input flex-1"
+                />
+                <button
+                  data-testid="whatsapp-save-button"
+                  onClick={saveWa}
+                  disabled={waSaving}
+                  className="bg-[#F2A93B] text-[#1C1C1E] px-6 py-3 text-sm font-semibold hover:bg-[#D98E1F] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                >
+                  {waSaving && <Loader2 className="w-4 h-4 animate-spin" />}
+                  Salva
+                </button>
+              </div>
             </div>
 
             <h2 className="mt-12 mb-6 font-display text-2xl font-bold">Interventi assegnati a te</h2>

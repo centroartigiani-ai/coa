@@ -270,6 +270,9 @@ export default function AdminDashboard() {
                               >
                                 <Star className="w-3.5 h-3.5" fill={p.premium ? "currentColor" : "none"} /> {p.premium ? "Premium" : "Rendi Premium"}
                               </button>
+                              <span data-testid={`whatsapp-indicator-${p.id}`} className={`text-[10px] font-bold tracking-widest uppercase ${p.whatsapp_active ? "text-[#25D366]" : "text-white/30"}`}>
+                                WA {p.whatsapp_active ? "attive" : "off"}
+                              </span>
                             </div>
                           ) : (
                             <button

@@ -258,6 +258,38 @@ async def notify_whatsapp(text: str, photo_url: str | None = None):
         logger.error("Invio WhatsApp fallito: %s", e)
 
 
+async def notify_partner_whatsapp(partner_email: str, req: dict):
+    u = await db.users.find_one({"email": partner_email})
+    apikey = (u or {}).get("whatsapp_apikey")
+    if not apikey:
+        logger.info("Partner %s senza apikey WhatsApp: notifica saltata", partner_email)
+        return
+    phone = (u or {}).get("telefono", "")
+    if not phone:
+        app_doc = await db.partner_applications.find_one({"email": partner_email})
+        phone = (app_doc or {}).get("telefono", "")
+    try:
+        import urllib.parse
+
+        import requests
+        msg = (
+            "NUOVO INTERVENTO ASSEGNATO — COA\n"
+            f"Tipo: {req.get('tipo_intervento')}\n"
+            f"Indirizzo: {req.get('indirizzo')}\n"
+            f"Cliente: {req.get('nome')} {req.get('cognome')}\n"
+            f"Telefono cliente: {req.get('telefono')}\n"
+            f"Urgente: {'SI' if req.get('urgente') else 'No'}\n"
+            f"Gestisci l'intervento: {os.environ.get('PUBLIC_URL')}/partner/login"
+        )
+        url = "https://api.callmebot.com/whatsapp.php?" + urllib.parse.urlencode(
+            {"phone": phone, "text": msg, "apikey": apikey}
+        )
+        resp = await asyncio.to_thread(requests.get, url, timeout=15)
+        logger.info("WhatsApp partner %s: HTTP %s — %s", partner_email, resp.status_code, resp.text[:100])
+    except Exception as e:
+        logger.error("Invio WhatsApp partner fallito: %s", e)
+
+
 async def read_upload(file):
     if not file or not file.filename:
         return None
@@ -366,6 +398,7 @@ async def create_request(
             "assignment_status": "assegnata", "assigned_at": datetime.now(timezone.utc).isoformat(),
         }})
         assigned = True
+        await notify_partner_whatsapp(partner["email"], doc)
         assign_html = build_email_html("Nuova richiesta assegnata a te", [
             ("Tipo", tipo_intervento), ("Indirizzo", indirizzo),
             ("Urgente", "Sì" if doc["urgente"] else "No"), ("Problema", descrizione),
@@ -381,6 +414,7 @@ async def create_partner(
     partita_iva: str = Form(...), telefono: str = Form(...), email: str = Form(...),
     professione: str = Form(...), zone_coperte: str = Form(...), anni_esperienza: str = Form(...),
     messaggio: str = Form(""), privacy: str = Form(...), password: str = Form(...), attachment: UploadFile | None = File(None),
+    whatsapp_apikey: str = Form(""),
     recaptcha_token: str | None = Form(None),
 ):
     if privacy != "true":
@@ -405,7 +439,8 @@ async def create_partner(
     await db.partner_applications.insert_one(doc)
     await db.users.insert_one({
         "email": email_norm, "password_hash": hash_password(password),
-        "name": f"{nome} {cognome}", "role": "partner",
+        "name": f"{nome} {cognome}", "role": "partner", "telefono": telefono,
+        "whatsapp_apikey": whatsapp_apikey.strip(),
         "approved": False, "premium": False,
         "created_at": datetime.now(timezone.utc),
     })
@@ -463,6 +498,7 @@ async def list_partners(user=Depends(require_admin)):
         u = users.get(d["email"].lower())
         d["approved"] = bool(u and u.get("approved"))
         d["premium"] = bool(u and u.get("premium"))
+        d["whatsapp_active"] = bool(u and u.get("whatsapp_apikey"))
     return docs
 
 
@@ -542,6 +578,16 @@ async def partner_assignments(user=Depends(get_current_partner)):
     ).sort("assigned_at", -1).to_list(200)
 
 
+class WhatsappBody(BaseModel):
+    apikey: str = ""
+
+
+@api_router.patch("/partner/whatsapp")
+async def partner_whatsapp(body: WhatsappBody, user=Depends(get_current_partner)):
+    await db.users.update_one({"email": user["email"]}, {"$set": {"whatsapp_apikey": body.apikey.strip()}})
+    return {"ok": True}
+
+
 class AssignmentStatusBody(BaseModel):
     status: str
 
@@ -617,6 +663,8 @@ async def assign_request(doc_id: str, body: AssignBody, user=Depends(require_adm
     }})
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Richiesta non trovata")
+    req_doc = await db.intervention_requests.find_one({"id": doc_id})
+    await notify_partner_whatsapp(partner["email"], req_doc)
     return {"ok": True}
 
 

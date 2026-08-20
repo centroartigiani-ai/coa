@@ -12,6 +12,7 @@ const ESPERIENZA = ["0-2 anni", "3-5 anni", "6-10 anni", "Oltre 10 anni"];
 const INITIAL = {
   nome: "", cognome: "", ragione_sociale: "", partita_iva: "", telefono: "",
   email: "", password: "", professione: "", zone_coperte: "", anni_esperienza: "", messaggio: "",
+  whatsapp_apikey: "",
 };
 
 export default function PartnerFormDialog({ open, onOpenChange }) {
@@ -119,6 +120,13 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
           <div className="sm:col-span-2">
             <label className="brutalist-label" htmlFor="par-zone">Zone coperte *</label>
             <input id="par-zone" data-testid="partner-zone-input" required value={form.zone_coperte} onChange={set("zone_coperte")} className="brutalist-input" placeholder="Es. Varese e comuni della provincia" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className="brutalist-label" htmlFor="par-wa">Notifiche WhatsApp — apikey CallMeBot (opzionale)</label>
+            <input id="par-wa" data-testid="partner-whatsapp-apikey-input" value={form.whatsapp_apikey} onChange={set("whatsapp_apikey")} className="brutalist-input" placeholder="Lascia vuoto se non ti interessa" />
+            <p className="mt-1.5 text-[11px] text-white/40 leading-relaxed">
+              Per ricevere notifiche istantanee su WhatsApp quando ti assegniamo un lavoro: manda "I allow callmebot to send me messages" al numero +34 644 51 95 23 su WhatsApp, poi incolla qui la apikey che ricevi in risposta. Potrai farlo anche dopo, dalla tua area riservata.
+            </p>
           </div>
           <div className="sm:col-span-2">
             <label className="brutalist-label" htmlFor="par-messaggio">Messaggio</label>
