@@ -50,6 +50,8 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 - MANCA (frontend): pagine /partner/login, /partner dashboard, /recensione/:token, sezione recensioni homepage, colonna assegnazione/approva/premium + tab recensioni in AdminDashboard
 - NOTA: email a indirizzi esterni (cliente/partner) falliscono in modalità test Resend finché non si verifica un dominio
 
+- Security hardening da GitHub (commit 5f833f2, mergiato 20/08/2026): reCAPTCHA v3 su /api/requests e /api/partners (campo recaptcha_token, fallback 400 se assente), middleware security headers (CSP, HSTS, X-Frame-Options...), magic bytes upload (solo JPG/PNG/PDF, funzione sniff_mime), CORS senza default "*" (richiede CORS_ORIGINS esplicita). Chiavi configurate in .env (RECAPTCHA_SECRET_KEY backend, REACT_APP_RECAPTCHA_SITE_KEY frontend). Chiave creata su reCAPTCHA Enterprise MA accettata dall'endpoint classico siteverify (provato: token falso → invalid-input-response, non invalid-input-secret). NOTA: nel browser headless dei test automatici lo script Google non si inizializza (browser-error) — da validare su browser reale; se fallisse anche lì, passare a CreateAssessment (serve GCP project ID + API key)
+
 ## In coda (approvato dall'utente, in attesa di risposte a 3 quesiti)
 1. Dashboard artigiani con login proprio + onboarding/verifica (quesito: come ricevono le credenziali — password in candidatura vs admin-created)
 2. Assegnazione automatica richieste → partner per zona/professione con priorità Premium (quesito: comportamento se nessun match)
