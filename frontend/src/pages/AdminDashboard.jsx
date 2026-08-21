@@ -3,6 +3,7 @@ import { Navigate } from "react-router-dom";
 import { Check, Loader2, LogOut, MessageCircle, Paperclip, Star, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api, API_BASE, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
@@ -73,7 +74,7 @@ function AttachmentLink({ item, endpoint }) {
 }
 
 const Th = ({ children }) => <th className="text-left text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 px-4 py-3 whitespace-nowrap">{children}</th>;
-const Td = ({ children, className = "" }) => <td className={`px-4 py-4 text-sm text-white/70 align-top ${className}`}>{children}</td>;
+const Td = ({ children, className = "", onClick }) => <td onClick={onClick} className={`px-4 py-4 text-sm text-white/70 align-top ${className}`}>{children}</td>;
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -81,6 +82,7 @@ export default function AdminDashboard() {
   const [partners, setPartners] = useState([]);
   const [partnersList, setPartnersList] = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -101,7 +103,9 @@ export default function AdminDashboard() {
     try {
       await api.patch(`/requests/${rid}/assign`, { partner_email: email });
       const p = partnersList.find((x) => x.email === email);
-      setRequests((rs) => rs.map((r) => (r.id === rid ? { ...r, assigned_to: email, assigned_name: p?.name || email, assignment_status: "assegnata" } : r)));
+      const patch = { assigned_to: email, assigned_name: p?.name || email, assignment_status: "assegnata" };
+      setRequests((rs) => rs.map((r) => (r.id === rid ? { ...r, ...patch } : r)));
+      setSelected((s) => (s && s.id === rid ? { ...s, ...patch } : s));
       toast.success("Richiesta assegnata");
     } catch (err) {
       toast.error(formatApiError(err.response?.data?.detail));
@@ -180,30 +184,20 @@ export default function AdminDashboard() {
             </TabsList>
 
             <TabsContent value="requests" className="mt-6">
-              <div className="border border-white/10 overflow-x-auto">
-                <table data-testid="requests-table" className="w-full min-w-[900px]">
+              <div className="border border-white/10">
+                <table data-testid="requests-table" className="w-full">
                   <thead className="bg-[#111111] border-b border-white/10">
-                    <tr><Th>Data</Th><Th>Cliente</Th><Th>Contatti</Th><Th>Comune</Th><Th>Tipo</Th><Th>Urgente</Th><Th>Foto</Th><Th>WhatsApp</Th><Th>Assegnato a</Th><Th>Stato</Th></tr>
+                    <tr><Th>Data</Th><Th>Cliente</Th><Th>Tipo</Th><Th>Urgente</Th><Th>Assegnato a</Th><Th>Stato</Th></tr>
                   </thead>
                   <tbody>
-                    {requests.length === 0 && <tr><Td className="text-center text-white/30 py-10" colSpan={10}>Nessuna richiesta ricevuta</Td></tr>}
+                    {requests.length === 0 && <tr><Td className="text-center text-white/30 py-10" colSpan={6}>Nessuna richiesta ricevuta</Td></tr>}
                     {requests.map((r) => (
-                      <tr key={r.id} data-testid={`request-row-${r.id}`} className="border-b border-white/5 hover:bg-white/[0.02]">
+                      <tr key={r.id} data-testid={`request-row-${r.id}`} onClick={() => setSelected(r)} className="border-b border-white/5 hover:bg-white/[0.04] cursor-pointer">
                         <Td className="whitespace-nowrap">{fmtDate(r.created_at)}</Td>
-                        <Td><p className="text-white font-medium">{r.nome} {r.cognome}</p><p className="text-xs text-white/40 mt-1 max-w-[220px] truncate" title={r.descrizione}>{r.descrizione}</p></Td>
-                        <Td><p>{r.telefono}</p><p className="text-xs text-white/40">{r.email}</p></Td>
-                        <Td>{r.comune || "—"}</Td>
+                        <Td><p className="text-white font-medium">{r.nome} {r.cognome}</p><p className="text-xs text-white/40 mt-1 max-w-[220px] truncate">{r.descrizione}</p></Td>
                         <Td>{r.tipo_intervento}</Td>
                         <Td>{r.urgente ? <span data-testid={`urgent-badge-${r.id}`} className="text-xs font-bold text-[#FF5A00] border border-[#FF5A00]/40 bg-[#FF5A00]/10 px-2 py-1">URGENTE</span> : <span className="text-white/20 text-xs">—</span>}</Td>
-                        <Td><AttachmentLink item={r} endpoint="requests" /></Td>
-                        <Td>
-                          <WhatsAppButton
-                            phone={r.telefono}
-                            testid={`whatsapp-request-${r.id}`}
-                            message={`Buongiorno ${r.nome}, sono COA — Centrale Operativa Artigiani. Abbiamo ricevuto la sua richiesta di "${r.tipo_intervento}". La ricontatto per organizzare l'intervento.`}
-                          />
-                        </Td>
-                        <Td>
+                        <Td onClick={(e) => e.stopPropagation()}>
                           {r.assigned_to ? (
                             <div data-testid={`assigned-to-${r.id}`}>
                               <p className="text-xs font-medium text-white">{r.assigned_name || r.assigned_to}</p>
@@ -224,12 +218,13 @@ export default function AdminDashboard() {
                             </Select>
                           )}
                         </Td>
-                        <Td><StatusSelect item={r} endpoint="requests" onUpdate={updateReq} testid={`status-select-${r.id}`} /></Td>
+                        <Td onClick={(e) => e.stopPropagation()}><StatusSelect item={r} endpoint="requests" onUpdate={updateReq} testid={`status-select-${r.id}`} /></Td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+              <p className="mt-3 text-xs text-white/30">Clicca una riga per aprire il dettaglio completo: contatti, descrizione, foto, WhatsApp e assegnazione.</p>
             </TabsContent>
 
             <TabsContent value="partners" className="mt-6">
@@ -328,6 +323,77 @@ export default function AdminDashboard() {
           </Tabs>
         )}
       </main>
+
+      <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
+        <DialogContent data-testid="request-detail-dialog" data-lenis-prevent className="bg-[#111111] border-white/10 text-white max-w-xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-none">
+          {selected && (
+            <>
+              <DialogHeader>
+                <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#FF5A00]">{selected.tipo_intervento}{selected.urgente ? " — URGENTE" : ""}</p>
+                <DialogTitle className="font-display text-2xl font-bold text-white">{selected.nome} {selected.cognome}</DialogTitle>
+                <DialogDescription className="text-white/50">{fmtDate(selected.created_at)}</DialogDescription>
+              </DialogHeader>
+              <div className="mt-4 border border-white/10 divide-y divide-white/5">
+                {[
+                  ["Telefono", selected.telefono],
+                  ["Email", selected.email],
+                  ["Indirizzo", selected.indirizzo],
+                  ...(selected.comune ? [["Comune", selected.comune]] : []),
+                  ["Problema", selected.descrizione],
+                ].map(([k, v]) => (
+                  <div key={k} className="flex gap-4 px-4 py-3 text-sm">
+                    <span className="w-24 shrink-0 text-[10px] tracking-[0.15em] uppercase text-white/40 pt-1">{k}</span>
+                    <span className="text-white/80">{v}</span>
+                  </div>
+                ))}
+                <div className="flex gap-4 px-4 py-3 text-sm items-center">
+                  <span className="w-24 shrink-0 text-[10px] tracking-[0.15em] uppercase text-white/40">Foto</span>
+                  <AttachmentLink item={selected} endpoint="requests" />
+                </div>
+              </div>
+              <div className="mt-5">
+                <WhatsAppButton
+                  phone={selected.telefono}
+                  testid={`detail-whatsapp-${selected.id}`}
+                  message={`Buongiorno ${selected.nome}, sono COA — Centrale Operativa Artigiani. Abbiamo ricevuto la sua richiesta di "${selected.tipo_intervento}". La ricontatto per organizzare l'intervento.`}
+                />
+              </div>
+              <div className="mt-6 pt-6 border-t border-white/10 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-2">Assegnazione</p>
+                  {selected.assigned_to && (
+                    <p data-testid="detail-current-assignment" className="text-sm text-white mb-2">{selected.assigned_name || selected.assigned_to} <span className="text-white/40 text-xs">({selected.assignment_status})</span></p>
+                  )}
+                  <Select onValueChange={(v) => assignPartner(selected.id, v)}>
+                    <SelectTrigger data-testid="detail-assign-select" className="h-9 w-full text-xs border border-[#FF5A00]/40 text-[#FF5A00] bg-[#FF5A00]/10 rounded-none">
+                      <SelectValue placeholder={selected.assigned_to ? "Cambia partner" : "Assegna a un partner"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
+                      {partnersList.map((p) => (
+                        <SelectItem key={p.email} value={p.email} className="focus:bg-[#FF5A00] focus:text-white text-xs">
+                          {p.name} — {p.professione}{p.premium ? " ★" : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-2">Stato richiesta</p>
+                  <StatusSelect item={selected} endpoint="requests" onUpdate={(id, st) => { updateReq(id, st); setSelected((s) => (s ? { ...s, status: st } : s)); }} testid="detail-status-select" />
+                </div>
+              </div>
+              {selected.review_token && (
+                <div className="mt-6 pt-4 border-t border-white/10">
+                  <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-2">Link recensione cliente</p>
+                  <a data-testid="detail-review-link" href={`${window.location.origin}/recensione/${selected.review_token}`} target="_blank" rel="noopener noreferrer" className="text-xs text-[#FF5A00] hover:underline break-all">
+                    {window.location.origin}/recensione/{selected.review_token}
+                  </a>
+                </div>
+              )}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

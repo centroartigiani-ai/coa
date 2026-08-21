@@ -58,6 +58,8 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 
 - Dominio definitivo ATTIVO (21/08/2026): coa-prontoartigiano.com punta all'app in produzione (https://interventi-veloci.emergent.host). PUBLIC_URL backend aggiornata a https://coa-prontoartigiano.com. CORS include preview + apex + www. ATTENZIONE: backend/.env è gitignored → se la produzione non eredita le env dal workspace, l'utente deve impostare PUBLIC_URL (e le altre chiavi) nelle variabili d'ambiente del deploy su Emergent. Da fare lato utente: aggiungere coa-prontoartigiano.com ai domini della chiave reCAPTCHA (altrimenti i form falliscono sul nuovo dominio), verifica dominio su Resend per email brandizzate
 
+- Fix admin (21/08/2026): tabella richieste compattata (rimossa colonna Comune ormai inutile, contatti/foto/WhatsApp spostati nel dettaglio) così le colonne Assegnato a e Stato sono sempre visibili senza scroll orizzontale; aggiunto dialog dettaglio al click sulla riga (tutti i campi, foto, WhatsApp cliente, assegna/cambia partner, stato, link recensione). Verificato: assegnazione manuale da tabella e da dettaglio OK; assegnazione automatica confermata funzionante (le richieste non assegnate erano tutte antecedenti alla feature o senza partner di quella professione)
+
 ## In coda (approvato dall'utente, in attesa di risposte a 3 quesiti)
 1. Dashboard artigiani con login proprio + onboarding/verifica (quesito: come ricevono le credenziali — password in candidatura vs admin-created)
 2. Assegnazione automatica richieste → partner per zona/professione con priorità Premium (quesito: comportamento se nessun match)
