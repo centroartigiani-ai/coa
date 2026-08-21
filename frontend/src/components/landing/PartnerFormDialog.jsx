@@ -51,7 +51,7 @@ export default function PartnerFormDialog({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent data-testid="partner-form-dialog" className="bg-[#26241F] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto rounded-none">
+      <DialogContent data-testid="partner-form-dialog" data-lenis-prevent className="bg-[#26241F] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-none">
         <DialogHeader>
           <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B]">Diventa partner</p>
           <DialogTitle className="font-display text-3xl font-bold text-white">Candidati come Partner</DialogTitle>

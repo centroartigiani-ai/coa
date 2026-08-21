@@ -54,6 +54,8 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 
 - Security hardening da GitHub (commit 5f833f2, mergiato 20/08/2026): reCAPTCHA v3 su /api/requests e /api/partners (campo recaptcha_token, fallback 400 se assente), middleware security headers (CSP, HSTS, X-Frame-Options...), magic bytes upload (solo JPG/PNG/PDF, funzione sniff_mime), CORS senza default "*" (richiede CORS_ORIGINS esplicita). Chiavi configurate in .env (RECAPTCHA_SECRET_KEY backend, REACT_APP_RECAPTCHA_SITE_KEY frontend). Chiave v3 STANDARD (non Enterprise). RISOLTO 20/08/2026: mancava il dominio interventi-veloci.preview.emergentagent.com nella console reCAPTCHA → dopo l'aggiunta e la propagazione Google, token validi con success:true score 0.9; test end-to-end del form riuscito. Soglia score 0.5 confermata adeguata. Log arricchito con hostname/success per diagnostica futura
 
+- Fix scroll modali (21/08/2026): Lenis intercettava gli eventi wheel facendo scrollare la pagina dietro le modali; aggiunto data-lenis-prevent + overscroll-contain su DialogContent di PartnerFormDialog e RequestWizard. Radix blocca già il body (overflow hidden). Testato con wheel reale: pagina ferma, contenuto modale scrolla
+
 ## In coda (approvato dall'utente, in attesa di risposte a 3 quesiti)
 1. Dashboard artigiani con login proprio + onboarding/verifica (quesito: come ricevono le credenziali — password in candidatura vs admin-created)
 2. Assegnazione automatica richieste → partner per zona/professione con priorità Premium (quesito: comportamento se nessun match)

@@ -72,7 +72,7 @@ export default function RequestWizard({ open, onOpenChange }) {
 
   return (
     <Dialog open={open} onOpenChange={close}>
-      <DialogContent data-testid="request-form-dialog" className="bg-[#26241F] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto rounded-none">
+      <DialogContent data-testid="request-form-dialog" data-lenis-prevent className="bg-[#26241F] border-white/10 text-white max-w-2xl max-h-[90vh] overflow-y-auto overscroll-contain rounded-none">
         {done ? (
           <div data-testid="request-success" className="py-14 text-center">
             <motion.span
