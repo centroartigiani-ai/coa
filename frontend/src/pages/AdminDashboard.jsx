@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Check, Loader2, LogOut, MessageCircle, Paperclip, Star, Wrench } from "lucide-react";
+import { Ban, Check, Loader2, LogOut, MessageCircle, Paperclip, RotateCcw, Star, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -16,6 +16,7 @@ const STATUS_COLORS = {
 };
 
 const fmtDate = (iso) => new Date(iso).toLocaleString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+const fmtPrefDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
 
 function waNumber(phone) {
   const digits = (phone || "").replace(/\D/g, "");
@@ -127,6 +128,27 @@ export default function AdminDashboard() {
       const { data } = await api.patch(`/partners/${id}/premium`);
       setPartners((ps) => ps.map((p) => (p.id === id ? { ...p, premium: data.premium } : p)));
       toast.success(data.premium ? "Partner impostato Premium" : "Premium rimosso");
+    } catch (err) {
+      toast.error(formatApiError(err.response?.data?.detail));
+    }
+  };
+
+  const revokePartner = async (id) => {
+    if (!window.confirm("Sospendere questo partner? Non riceverà più assegnazioni e non potrà accedere alla sua area.")) return;
+    try {
+      await api.patch(`/partners/${id}/revoke`);
+      setPartners((ps) => ps.map((p) => (p.id === id ? { ...p, status: "sospesa", approved: false } : p)));
+      toast.success("Partner sospeso: escluso dalle assegnazioni");
+    } catch (err) {
+      toast.error(formatApiError(err.response?.data?.detail));
+    }
+  };
+
+  const reactivatePartner = async (id) => {
+    try {
+      await api.patch(`/partners/${id}/reactivate`);
+      setPartners((ps) => ps.map((p) => (p.id === id ? { ...p, status: "approvata", approved: true } : p)));
+      toast.success("Partner riattivato");
     } catch (err) {
       toast.error(formatApiError(err.response?.data?.detail));
     }
@@ -253,7 +275,18 @@ export default function AdminDashboard() {
                           />
                         </Td>
                         <Td>
-                          {p.approved ? (
+                          {p.status === "sospesa" ? (
+                            <div className="flex flex-col gap-2 items-start">
+                              <span data-testid={`partner-suspended-${p.id}`} className="text-[10px] font-bold tracking-widest uppercase text-red-400 border border-red-400/40 bg-red-400/10 px-2 py-1">Sospeso</span>
+                              <button
+                                data-testid={`reactivate-partner-${p.id}`}
+                                onClick={() => reactivatePartner(p.id)}
+                                className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 border text-emerald-400 border-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
+                              >
+                                <RotateCcw className="w-3.5 h-3.5" /> Riattiva
+                              </button>
+                            </div>
+                          ) : p.approved ? (
                             <div className="flex flex-col gap-2 items-start">
                               <span data-testid={`partner-active-${p.id}`} className="text-[10px] font-bold tracking-widest uppercase text-emerald-400 border border-emerald-400/40 bg-emerald-400/10 px-2 py-1">Attivo</span>
                               <button
@@ -268,6 +301,13 @@ export default function AdminDashboard() {
                               <span data-testid={`whatsapp-indicator-${p.id}`} className={`text-[10px] font-bold tracking-widest uppercase ${p.whatsapp_active ? "text-[#25D366]" : "text-white/30"}`}>
                                 WA {p.whatsapp_active ? "attive" : "off"}
                               </span>
+                              <button
+                                data-testid={`revoke-partner-${p.id}`}
+                                onClick={() => revokePartner(p.id)}
+                                className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 border text-red-400 border-red-400/40 hover:bg-red-400/10 transition-colors"
+                              >
+                                <Ban className="w-3.5 h-3.5" /> Revoca
+                              </button>
                             </div>
                           ) : (
                             <button
@@ -339,10 +379,12 @@ export default function AdminDashboard() {
                   ["Email", selected.email],
                   ["Indirizzo", selected.indirizzo],
                   ...(selected.comune ? [["Comune", selected.comune]] : []),
+                  ...(selected.data_preferita ? [["Data preferita", fmtPrefDate(selected.data_preferita)]] : []),
+                  ...(selected.fascia_oraria ? [["Fascia oraria", selected.fascia_oraria]] : []),
                   ["Problema", selected.descrizione],
                 ].map(([k, v]) => (
                   <div key={k} className="flex gap-4 px-4 py-3 text-sm">
-                    <span className="w-24 shrink-0 text-[10px] tracking-[0.15em] uppercase text-white/40 pt-1">{k}</span>
+                    <span className="w-28 shrink-0 text-[10px] tracking-[0.15em] uppercase text-white/40 pt-1">{k}</span>
                     <span className="text-white/80">{v}</span>
                   </div>
                 ))}

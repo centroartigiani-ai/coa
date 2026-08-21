@@ -1,0 +1,38 @@
+{
+  "summary": "Frontend E2E testing (Playwright, Chromium, 1920x1080) of the 2 new features on the preview URL: (1) optional 'Data preferita' + 'Fascia oraria' fields in step 2 of the RequestWizard and their conditional display in step 3 summary and in the AdminDashboard request-detail dialog; (2) reversible partner revoke/reactivate in the admin Partner tab plus suspended-partner login block on /partner/login. All UI flows PASS except the final form submission, which is blocked in headless automation by reCAPTCHA v3 (score 0.1 -> backend 400) - the app handled it gracefully with the toast 'Verifica anti-spam non superata, riprova'. Backend code for both features reviewed (POST /api/requests accepts data_preferita/fascia_oraria; PATCH /partners/{id}/revoke|reactivate; login 403 for suspended partner without incrementing lockout counter). Luca Prati was left in ATTIVO state (verified in DB: application status 'approvata', user approved=true, suspended=false) and the seeded test request was deleted.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/requests", "issue": "Cannot be exercised from automated browsers: reCAPTCHA v3 returns score 0.1 for Playwright/headless traffic and the endpoint rejects with 400 'Verifica anti-spam non superata'. Expected behaviour, but E2E persistence of data_preferita/fascia_oraria via the real form could NOT be verified by automation - needs a manual real-browser submit (or a test bypass hook)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "RequestWizard - Data preferita", "issue": "The min=today attribute is only native HTML validation; the wizard has no JS guard, so a manually typed past date (e.g. 2026-08-11) is accepted, appears in the step-3 summary and would be submitted (input.checkValidity() === false but nothing blocks Continua/Invia).", "selector": "[data-testid=\"request-data-preferita-input\"]", "priority": "MEDIUM"},
+      {"component": "AdminDashboard - Revoca", "issue": "Destructive 'Revoca' action executes immediately with no confirmation dialog (only a success toast). Recommend an AlertDialog confirm.", "selector": "[data-testid^=\"revoke-partner-\"]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Request detail dialog (admin)", "issues": ["Label column is w-24 so 'DATA PREFERITA' wraps onto two lines while values stay aligned - slightly ragged; consider w-28/w-32", "Cookie banner overlays the bottom of the wizard dialog (Invia richiesta button partially covered at 1080px height) - it is still clickable but visually crowded"]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Add a JS/validation guard so a past 'Data preferita' cannot be carried to step 3 / submitted (or clamp value to today on change)",
+    "Manually verify one real-browser submit with data_preferita + fascia_oraria filled (automation is blocked by reCAPTCHA score) and confirm the values persist and appear in the admin detail dialog",
+    "Optional: add confirmation dialog before 'Revoca' and widen the label column in the request detail dialog"
+  ],
+  "critical_code_review_comments": [
+    "server.py line ~379: build_email_html row passed as a list inside a tuple-ish expression `(['Urgente', ...])` - works only because build_email_html unpacks any 2-sequence; make it a tuple for consistency.",
+    "login(): suspended-partner 403 is raised after password verification and does NOT increment the brute-force counter (correct), but it also does not clear login_attempts - harmless, just noting.",
+    "revoke sets users.approved=False + suspended=True and application status='sospesa'; reactivate restores both - consistent, but 'approved' state of a partner that was never approved would be flipped to True by reactivate if the endpoint were called on a pending application (no guard on current status)."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "n/a (frontend-only run; revoke/reactivate/login paths verified through UI)", "frontend": "92% (11/12 checks passed; only reCAPTCHA-blocked submit not verifiable)"},
+  "seed_data_creation": "Temporarily inserted one intervention_requests doc (TEST QA Preferenze, data_preferita 2026-08-26, fascia 'Mattina (8-12)') to validate the admin detail dialog; DELETED after the test. No other data changes; Luca Prati restored to ATTIVO.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@coa-varese.it / CoaAdmin2026! ; luca.prati@test.it / partner123 (left ACTIVE)",
+  "context_for_next_testing_agent": "Verified via UI: step-2 shows 'Data preferita (opzionale)' with min=today and 3 fascia chips (select on click, deselect on second click); step-3 summary shows the two rows only when filled (note: CSS text-transform uppercases the labels, assert case-insensitively); admin detail dialog (data-testid=request-detail-dialog) shows DATA PREFERITA 26/08/2026 and FASCIA ORARIA Mattina (8-12); revoke-partner-062dd798-6e83-43e1-895f-50865e1783b9 -> partner-suspended badge + reactivate button, /partner/login shows 'Account sospeso. Contatta COA per essere riattivato.', after reactivate badge=ATTIVO and partner login redirects to /partner. Form submission cannot be completed from Playwright (reCAPTCHA v3 score 0.1 -> 400); requests can be seeded directly into MongoDB collection 'intervention_requests' instead.",
+  "rca_of_the_issue": "Submit failure is not an app defect: backend log shows 'reCAPTCHA respinto (action=richiesta_intervento, score=0.1, success=True)' -> HTTPException 400 in verify_recaptcha (server.py:85). Google scores automated browser sessions below the 0.5 threshold. Frontend surfaced the error correctly and re-enabled the submit button."
+}

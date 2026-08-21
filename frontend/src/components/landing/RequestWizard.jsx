@@ -15,7 +15,8 @@ const TYPES = [
 ];
 
 const STEPS = ["I tuoi dati", "L'intervento", "Conferma"];
-const INITIAL = { nome: "", cognome: "", telefono: "", email: "", indirizzo: "", tipo_intervento: "", descrizione: "", urgente: "no" };
+const FASCE_ORARIE = ["Mattina (8–12)", "Pomeriggio (12–18)", "Sera (18–21)"];
+const INITIAL = { nome: "", cognome: "", telefono: "", email: "", indirizzo: "", tipo_intervento: "", descrizione: "", urgente: "no", data_preferita: "", fascia_oraria: "" };
 
 export default function RequestWizard({ open, onOpenChange }) {
   const [step, setStep] = useState(0);
@@ -25,7 +26,14 @@ export default function RequestWizard({ open, onOpenChange }) {
   const [privacy, setPrivacy] = useState(false);
   const [sending, setSending] = useState(false);
 
+  const now = new Date();
+  const minDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
+  const setDataPreferita = (e) => {
+    const v = e.target.value;
+    setForm({ ...form, data_preferita: v && v < minDate ? minDate : v });
+  };
 
   const validStep = () => {
     if (step === 0) return form.nome.trim() && form.cognome.trim() && form.telefono.trim() && /.+@.+\..+/.test(form.email) && form.indirizzo.trim();
@@ -191,6 +199,39 @@ export default function RequestWizard({ open, onOpenChange }) {
                           ))}
                         </div>
                       </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                          <label className="brutalist-label" htmlFor="req-data">Data preferita (opzionale)</label>
+                          <input
+                            id="req-data"
+                            data-testid="request-data-preferita-input"
+                            type="date"
+                            min={minDate}
+                            value={form.data_preferita}
+                            onChange={setDataPreferita}
+                            className="brutalist-input"
+                            style={{ colorScheme: "dark" }}
+                          />
+                        </div>
+                        <div>
+                          <label className="brutalist-label">Fascia oraria (opzionale)</label>
+                          <div className="grid grid-cols-3 gap-2" data-testid="request-fascia-oraria-group">
+                            {FASCE_ORARIE.map((f) => (
+                              <button
+                                key={f}
+                                type="button"
+                                data-testid={`request-fascia-${f.split(" ")[0].toLowerCase()}`}
+                                onClick={() => setForm({ ...form, fascia_oraria: form.fascia_oraria === f ? "" : f })}
+                                className={`px-2 py-3 text-xs font-medium border transition-colors duration-300 ${
+                                  form.fascia_oraria === f ? "border-[#F2A93B] bg-[#F2A93B]/10 text-white" : "border-white/15 text-white/50 hover:border-white/40"
+                                }`}
+                              >
+                                {f}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -204,10 +245,12 @@ export default function RequestWizard({ open, onOpenChange }) {
                           ["Indirizzo", form.indirizzo],
                           ["Intervento", form.tipo_intervento],
                           ["Urgente", form.urgente === "si" ? "Sì" : "No"],
+                          ...(form.data_preferita ? [["Data preferita", new Date(`${form.data_preferita}T00:00:00`).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })]] : []),
+                          ...(form.fascia_oraria ? [["Fascia oraria", form.fascia_oraria]] : []),
                           ["Problema", form.descrizione],
                         ].map(([k, v]) => (
                           <div key={k} className="flex gap-4 px-4 py-3 text-sm">
-                            <span className="w-24 shrink-0 text-[10px] tracking-[0.15em] uppercase text-white/40 pt-1">{k}</span>
+                            <span className="w-28 shrink-0 text-[10px] tracking-[0.15em] uppercase text-white/40 pt-1">{k}</span>
                             <span className="text-white/80">{v}</span>
                           </div>
                         ))}

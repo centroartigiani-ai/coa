@@ -129,7 +129,7 @@ async def get_current_user(request: Request):
     user = await db.users.find_one({"_id": ObjectId(payload["sub"])})
     if not user:
         raise HTTPException(status_code=401, detail="Utente non trovato")
-    return {"id": str(user["_id"]), "email": user["email"], "name": user.get("name", "Admin"), "role": user.get("role", "admin")}
+    return {"id": str(user["_id"]), "email": user["email"], "name": user.get("name", "Admin"), "role": user.get("role", "admin"), "suspended": bool(user.get("suspended"))}
 
 
 async def require_admin(user=Depends(get_current_user)):
@@ -141,6 +141,8 @@ async def require_admin(user=Depends(get_current_user)):
 async def get_current_partner(user=Depends(get_current_user)):
     if user.get("role") != "partner":
         raise HTTPException(status_code=403, detail="Accesso riservato ai partner")
+    if user.get("suspended"):
+        raise HTTPException(status_code=403, detail="Account sospeso. Contatta COA per essere riattivato.")
     return user
 
 
@@ -182,6 +184,8 @@ async def login(body: LoginBody, request: Request, response: Response):
     if not user or not verify_password(body.password, user["password_hash"]):
         await record_failure(identifier)
         raise HTTPException(status_code=401, detail="Credenziali non valide")
+    if user.get("role") == "partner" and user.get("suspended"):
+        raise HTTPException(status_code=403, detail="Account sospeso. Contatta COA per essere riattivato.")
     await db.login_attempts.delete_one({"identifier": identifier})
     response.set_cookie("access_token", create_access_token(str(user["_id"]), email),
                         httponly=True, secure=True, samesite="none", max_age=900, path="/")
@@ -349,6 +353,7 @@ async def create_request(
     nome: str = Form(...), cognome: str = Form(...), telefono: str = Form(...), email: str = Form(...),
     indirizzo: str = Form(...), tipo_intervento: str = Form(...),
     descrizione: str = Form(...), urgente: str = Form("no"), comune: str = Form(""),
+    data_preferita: str = Form(""), fascia_oraria: str = Form(""),
     privacy: str = Form(...), photo: UploadFile | None = File(None),
     recaptcha_token: str | None = Form(None),
 ):
@@ -361,6 +366,7 @@ async def create_request(
         "comune": comune, "indirizzo": indirizzo, "tipo_intervento": tipo_intervento,
         "descrizione": descrizione,
         "urgente": urgente.lower() in ("si", "sì", "true", "yes", "1"),
+        "data_preferita": data_preferita, "fascia_oraria": fascia_oraria,
         "photo": await read_upload(photo),
         "privacy_accepted_at": datetime.now(timezone.utc).isoformat(),
         "status": "nuova",
@@ -370,7 +376,10 @@ async def create_request(
     html = build_email_html(f"Nuova richiesta di intervento — {tipo_intervento}", [
         ("Nome", f"{nome} {cognome}"), ("Telefono", telefono), ("Email", email),
         ("Comune", comune), ("Indirizzo", indirizzo), ("Tipo", tipo_intervento),
-        ("Urgente", "Sì" if doc["urgente"] else "No"), ("Descrizione", descrizione),
+        (["Urgente", "Sì" if doc["urgente"] else "No"]),
+        *( [("Data preferita", data_preferita)] if data_preferita else [] ),
+        *( [("Fascia oraria", fascia_oraria)] if fascia_oraria else [] ),
+        ("Descrizione", descrizione),
     ])
     await notify_admin(f"[COA] Nuova richiesta: {tipo_intervento}", html, doc["photo"])
     photo_url = f"{os.environ.get('PUBLIC_URL')}/api/public/requests/{doc['id']}/photo" if doc["photo"] else None
@@ -646,6 +655,28 @@ async def toggle_premium(doc_id: str, user=Depends(require_admin)):
     new_val = not u.get("premium", False)
     await db.users.update_one({"email": app_doc["email"].lower()}, {"$set": {"premium": new_val}})
     return {"ok": True, "premium": new_val}
+
+
+@api_router.patch("/partners/{doc_id}/revoke")
+async def revoke_partner(doc_id: str, user=Depends(require_admin)):
+    app_doc = await db.partner_applications.find_one({"id": doc_id})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Candidatura non trovata")
+    await db.partner_applications.update_one({"id": doc_id}, {"$set": {"status": "sospesa"}})
+    await db.users.update_one({"email": app_doc["email"].lower()}, {"$set": {"approved": False, "suspended": True}})
+    return {"ok": True}
+
+
+@api_router.patch("/partners/{doc_id}/reactivate")
+async def reactivate_partner(doc_id: str, user=Depends(require_admin)):
+    app_doc = await db.partner_applications.find_one({"id": doc_id})
+    if not app_doc:
+        raise HTTPException(status_code=404, detail="Candidatura non trovata")
+    if app_doc.get("status") != "sospesa":
+        raise HTTPException(status_code=400, detail="Il partner non è sospeso")
+    await db.partner_applications.update_one({"id": doc_id}, {"$set": {"status": "approvata"}})
+    await db.users.update_one({"email": app_doc["email"].lower()}, {"$set": {"approved": True, "suspended": False}})
+    return {"ok": True}
 
 
 class AssignBody(BaseModel):
