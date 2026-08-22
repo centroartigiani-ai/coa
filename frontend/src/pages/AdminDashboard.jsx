@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { api, API_BASE, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { AdminCalendar } from "@/components/admin/AdminCalendar";
 
 const STATUS_LABELS = { nuova: "Nuova", in_lavorazione: "In lavorazione", completata: "Completata" };
 const STATUS_COLORS = {
@@ -236,6 +237,7 @@ export default function AdminDashboard() {
             <TabsList className="bg-[#111111] border border-white/10 rounded-none h-auto p-1">
               <TabsTrigger data-testid="tab-requests" value="requests" className="rounded-none data-[state=active]:bg-[#FF5A00] data-[state=active]:text-white px-6 py-2.5">Richieste ({requests.length})</TabsTrigger>
               <TabsTrigger data-testid="tab-partners" value="partners" className="rounded-none data-[state=active]:bg-[#FF5A00] data-[state=active]:text-white px-6 py-2.5">Partner ({partners.length})</TabsTrigger>
+              <TabsTrigger data-testid="tab-calendar" value="calendar" className="rounded-none data-[state=active]:bg-[#FF5A00] data-[state=active]:text-white px-6 py-2.5">Calendario</TabsTrigger>
               <TabsTrigger data-testid="tab-reviews" value="reviews" className="rounded-none data-[state=active]:bg-[#FF5A00] data-[state=active]:text-white px-6 py-2.5">Recensioni ({reviews.filter((r) => !r.approved).length} da moderare)</TabsTrigger>
             </TabsList>
 
@@ -357,6 +359,21 @@ export default function AdminDashboard() {
                   </tbody>
                 </table>
               </div>
+            </TabsContent>
+
+            <TabsContent value="calendar" className="mt-6">
+              <AdminCalendar
+                requests={requests}
+                onOpenRequest={(rid) => {
+                  const r = requests.find((x) => x.id === rid);
+                  if (r) setSelected(r);
+                  else toast.error("Richiesta non trovata");
+                }}
+                onAssigned={(rid, patch) => {
+                  setRequests((rs) => rs.map((r) => (r.id === rid ? { ...r, ...patch } : r)));
+                  setSelected((s) => (s && s.id === rid ? { ...s, ...patch } : s));
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="reviews" className="mt-6">

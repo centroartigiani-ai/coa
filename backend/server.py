@@ -425,7 +425,13 @@ async def create_request(
             "assignment_status": "assegnata", "assigned_at": datetime.now(timezone.utc).isoformat(),
         }
         fk = fascia_key(fascia_oraria)
-        if data_preferita and fk:
+        sunday = False
+        if data_preferita:
+            try:
+                sunday = datetime.strptime(data_preferita, "%Y-%m-%d").date().weekday() == 6
+            except ValueError:
+                sunday = True
+        if data_preferita and fk and not sunday:
             clash = await db.availability_slots.find_one(
                 {"partner_email": partner["email"], "date": data_preferita, "fascia": fk})
             if not clash:
@@ -660,6 +666,8 @@ async def partner_toggle_slot(body: SlotBody, user=Depends(get_current_partner))
     today = datetime.now(timezone.utc).date()
     if slot_date < today or slot_date > today + timedelta(days=SLOT_HORIZON_DAYS):
         raise HTTPException(status_code=400, detail="Data fuori dal periodo gestibile")
+    if slot_date.weekday() == 6:
+        raise HTTPException(status_code=400, detail="La domenica non è gestita dal calendario")
     key = {"partner_email": user["email"], "date": body.date, "fascia": body.fascia}
     existing = await db.availability_slots.find_one(key)
     if existing and existing.get("status") == "assegnato":
@@ -710,6 +718,40 @@ async def admin_partners_list(user=Depends(require_admin), date: str = "", fasci
                     "professione": a.get("professione", ""), "zone_coperte": a.get("zone_coperte", ""),
                     "slot_status": busy.get(p["email"], "libero") if busy or (date and fascia) else None})
     return out
+
+
+@api_router.get("/admin/calendar")
+async def admin_calendar(start: str, user=Depends(require_admin)):
+    start_date = parse_slot_date(start)
+    end_date = (start_date + timedelta(days=6)).isoformat()
+    partners = await db.users.find({"role": "partner", "approved": True}, {"_id": 0, "password_hash": 0}).to_list(500)
+    emails = [p["email"] for p in partners]
+    apps = {a["email"].lower(): a for a in await db.partner_applications.find({}, {"_id": 0, "attachment": 0}).to_list(500)}
+    slots = await db.availability_slots.find(
+        {"partner_email": {"$in": emails}, "date": {"$gte": start_date.isoformat(), "$lt": end_date}},
+        {"_id": 0, "created_at": 0},
+    ).to_list(2000)
+    req_ids = [s["request_id"] for s in slots if s.get("request_id")]
+    reqs = {}
+    if req_ids:
+        async for r in db.intervention_requests.find({"id": {"$in": req_ids}}, {"_id": 0, "id": 1, "nome": 1, "cognome": 1, "tipo_intervento": 1}):
+            reqs[r["id"]] = r
+    partners_out = []
+    for p in partners:
+        a = apps.get(p["email"], {})
+        partners_out.append({"email": p["email"], "name": p.get("name", ""), "premium": bool(p.get("premium")),
+                             "professione": a.get("professione", ""), "zone_coperte": a.get("zone_coperte", "")})
+    partners_out.sort(key=lambda p: (not p["premium"], p["name"].lower()))
+    slots_out = []
+    for s in slots:
+        r = reqs.get(s.get("request_id") or "")
+        slots_out.append({
+            "partner_email": s["partner_email"], "date": s["date"], "fascia": s["fascia"], "status": s["status"],
+            "request_id": s.get("request_id"),
+            "cliente": f"{r['nome']} {r['cognome']}" if r else None,
+            "tipo_intervento": r.get("tipo_intervento") if r else None,
+        })
+    return {"partners": partners_out, "slots": slots_out}
 
 
 @api_router.patch("/partners/{doc_id}/approve")
@@ -775,6 +817,8 @@ async def assign_request(doc_id: str, body: AssignBody, user=Depends(require_adm
     slot_date = parse_slot_date(body.date)
     if slot_date < datetime.now(timezone.utc).date():
         raise HTTPException(status_code=400, detail="Non puoi assegnare una data passata")
+    if slot_date.weekday() == 6:
+        raise HTTPException(status_code=400, detail="La domenica non è un giorno lavorativo nel calendario")
     partner = await db.users.find_one({"email": body.partner_email.lower(), "role": "partner", "approved": True})
     if not partner:
         raise HTTPException(status_code=404, detail="Partner non trovato o non approvato")

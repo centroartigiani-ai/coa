@@ -271,3 +271,106 @@ class TestSlotAssignment:
         r = admin_client.patch(f"{BASE_URL}/requests/{uuid.uuid4()}/assign", json={
             "partner_email": PARTNER["email"], "date": D1, "fascia": "mattina"})
         assert r.status_code == 404, r.text
+
+
+# ---------- Admin general calendar (GET /api/admin/calendar) ----------
+# Uses week+3 offset dates (W3A/W3B) so it cannot clash with the other classes (pytest-xdist by class).
+W3A = (NEXT_MONDAY + timedelta(days=14)).isoformat()
+W3B = (NEXT_MONDAY + timedelta(days=15)).isoformat()
+
+
+@pytest.fixture(scope="class")
+def cal_requests():
+    ids = []
+    yield ids
+    db.intervention_requests.delete_many({"id": {"$in": ids}})
+    db.availability_slots.delete_many({"partner_email": PARTNER["email"], "date": {"$in": [W3A, W3B]}})
+
+
+class TestAdminCalendar:
+    def test_requires_auth(self):
+        r = requests.get(f"{BASE_URL}/admin/calendar?start={W3A}")
+        assert r.status_code == 401
+
+    def test_partner_forbidden(self, partner_client):
+        r = partner_client.get(f"{BASE_URL}/admin/calendar?start={W3A}")
+        assert r.status_code == 403
+
+    def test_bad_start_400(self, admin_client):
+        assert admin_client.get(f"{BASE_URL}/admin/calendar?start=22-08-2026").status_code == 400
+
+    def test_missing_start_422(self, admin_client):
+        assert admin_client.get(f"{BASE_URL}/admin/calendar").status_code == 422
+
+    def test_structure_and_premium_sort(self, admin_client):
+        r = admin_client.get(f"{BASE_URL}/admin/calendar?start={W3A}")
+        assert r.status_code == 200, r.text
+        d = r.json()
+        assert set(d.keys()) == {"partners", "slots"}
+        assert isinstance(d["partners"], list) and len(d["partners"]) > 0
+        for p in d["partners"]:
+            assert set(p.keys()) == {"email", "name", "premium", "professione", "zone_coperte"}
+            assert isinstance(p["premium"], bool)
+            assert "_id" not in p and "password_hash" not in p
+        prem = [not p["premium"] for p in d["partners"]]
+        assert prem == sorted(prem), "i partner Premium devono stare in cima"
+        assert any(p["email"] == PARTNER["email"] for p in d["partners"])
+        for s in d["slots"]:
+            assert "_id" not in s
+            assert s["status"] in ("libero", "occupato", "assegnato")
+
+    def test_only_approved_partners(self, admin_client):
+        emails = [p["email"] for p in admin_client.get(f"{BASE_URL}/admin/calendar?start={W3A}").json()["partners"]]
+        approved = {u["email"] for u in db.users.find({"role": "partner", "approved": True}, {"email": 1})}
+        assert set(emails) == approved
+        not_approved = {u["email"] for u in db.users.find({"role": "partner", "approved": {"$ne": True}}, {"email": 1})}
+        assert not (set(emails) & not_approved)
+
+    def test_suspended_partner_hidden(self, admin_client):
+        """Simulate suspension directly in Mongo (revoke sets approved=False, suspended=True) and restore."""
+        db.users.update_one({"email": PARTNER["email"]}, {"$set": {"approved": False, "suspended": True}})
+        try:
+            emails = [p["email"] for p in admin_client.get(f"{BASE_URL}/admin/calendar?start={W3A}").json()["partners"]]
+            assert PARTNER["email"] not in emails
+        finally:
+            db.users.update_one({"email": PARTNER["email"]}, {"$set": {"approved": True, "suspended": False}})
+        emails = [p["email"] for p in admin_client.get(f"{BASE_URL}/admin/calendar?start={W3A}").json()["partners"]]
+        assert PARTNER["email"] in emails
+
+    def test_partner_occupied_slot_visible_to_admin(self, admin_client, partner_client):
+        assert partner_client.patch(f"{BASE_URL}/partner/availability",
+                                    json={"date": W3A, "fascia": "pomeriggio", "occupied": True}).status_code == 200
+        try:
+            slots = admin_client.get(f"{BASE_URL}/admin/calendar?start={W3A}").json()["slots"]
+            m = [s for s in slots if s["partner_email"] == PARTNER["email"] and s["date"] == W3A and s["fascia"] == "pomeriggio"]
+            assert m, "slot occupato dal partner non visibile nel calendario admin"
+            assert m[0]["status"] == "occupato"
+            assert m[0]["request_id"] is None and m[0]["cliente"] is None
+        finally:
+            partner_client.patch(f"{BASE_URL}/partner/availability",
+                                 json={"date": W3A, "fascia": "pomeriggio", "occupied": False})
+
+    def test_assigned_slot_exposes_client_name(self, admin_client, cal_requests):
+        rid = seed_request(cal_requests, nome="TEST_CAL")
+        a = admin_client.patch(f"{BASE_URL}/requests/{rid}/assign", json={
+            "partner_email": PARTNER["email"], "date": W3B, "fascia": "mattina"})
+        assert a.status_code == 200, a.text
+        slots = admin_client.get(f"{BASE_URL}/admin/calendar?start={W3A}").json()["slots"]
+        m = [s for s in slots if s["partner_email"] == PARTNER["email"] and s["date"] == W3B and s["fascia"] == "mattina"]
+        assert m, "slot assegnato assente"
+        assert m[0]["status"] == "assegnato"
+        assert m[0]["request_id"] == rid
+        assert m[0]["cliente"] == "TEST_CAL Slot"
+        assert m[0]["tipo_intervento"] == "Idraulico"
+
+    def test_week_window_is_6_days(self, admin_client, cal_requests):
+        """Slots of a Sunday (start+6) must NOT be returned; Mon..Sat only."""
+        sunday = (NEXT_MONDAY + timedelta(days=20)).isoformat()  # W3A + 6
+        db.availability_slots.insert_one({"id": str(uuid.uuid4()), "partner_email": PARTNER["email"],
+                                          "date": sunday, "fascia": "mattina", "status": "occupato",
+                                          "request_id": None, "created_at": datetime.now(timezone.utc).isoformat()})
+        try:
+            slots = admin_client.get(f"{BASE_URL}/admin/calendar?start={W3A}").json()["slots"]
+            assert not [s for s in slots if s["date"] == sunday], "domenica non deve essere inclusa"
+        finally:
+            db.availability_slots.delete_many({"partner_email": PARTNER["email"], "date": sunday})
