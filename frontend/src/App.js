@@ -7,6 +7,7 @@ import Landing from "@/pages/Landing";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import PartnerLogin from "@/pages/PartnerLogin";
+import PartnerResetPassword from "@/pages/PartnerResetPassword";
 import PartnerDashboard from "@/pages/PartnerDashboard";
 import ReviewPage from "@/pages/ReviewPage";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
@@ -26,6 +27,7 @@ function App() {
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/partner/login" element={<PartnerLogin />} />
+              <Route path="/partner/reset-password/:token" element={<PartnerResetPassword />} />
               <Route path="/partner" element={<PartnerDashboard />} />
               <Route path="/recensione/:token" element={<ReviewPage />} />
             </Routes>

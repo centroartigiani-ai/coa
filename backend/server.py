@@ -9,6 +9,7 @@ import base64
 import logging
 import os
 import uuid
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import bcrypt
@@ -233,6 +234,57 @@ async def logout(response: Response):
 @api_router.get("/auth/me")
 async def me(user=Depends(get_current_user)):
     return user
+
+
+class ForgotBody(BaseModel):
+    email: EmailStr
+
+
+@api_router.post("/auth/forgot-password")
+async def forgot_password(body: ForgotBody):
+    email = body.email.lower()
+    identifier = f"reset:{email}"
+    await check_lockout(identifier)
+    await record_failure(identifier)
+    user = await db.users.find_one({"email": email})
+    if user:
+        token = secrets.token_urlsafe(32)
+        await db.password_reset_tokens.insert_one({
+            "token": token, "email": email,
+            "expires_at": datetime.now(timezone.utc) + timedelta(hours=1),
+            "used": False, "created_at": datetime.now(timezone.utc),
+        })
+        link = f"{os.environ.get('PUBLIC_URL')}/partner/reset-password/{token}"
+        html = build_email_html("Reimposta la tua password COA", [
+            ("Richiesta", "È stata richiesta la reimpostazione della password del tuo account COA."),
+            ("Nuova password", f'<a href="{link}" style="color:#F2A93B;">Clicca qui per scegliere una nuova password</a>'),
+            ("Validità", "Il link vale 1 ora e si può usare una sola volta. Se non hai fatto tu questa richiesta, ignora questa email."),
+        ])
+        await send_email(email, "COA — Reimposta la password", html)
+    return {"ok": True, "message": "Se l'email è registrata, riceverai a breve un link per reimpostare la password."}
+
+
+class ResetBody(BaseModel):
+    token: str
+    password: str
+
+
+@api_router.post("/auth/reset-password")
+async def reset_password(body: ResetBody):
+    if len(body.password) < 8:
+        raise HTTPException(status_code=400, detail="La password deve avere almeno 8 caratteri")
+    rec = await db.password_reset_tokens.find_one({"token": body.token})
+    if not rec or rec.get("used"):
+        raise HTTPException(status_code=400, detail="Link non valido o già utilizzato. Richiedine uno nuovo.")
+    expires = rec["expires_at"]
+    if expires.tzinfo is None:
+        expires = expires.replace(tzinfo=timezone.utc)
+    if expires < datetime.now(timezone.utc):
+        raise HTTPException(status_code=400, detail="Link scaduto. Richiedine uno nuovo.")
+    await db.users.update_one({"email": rec["email"]}, {"$set": {"password_hash": hash_password(body.password)}})
+    await db.password_reset_tokens.update_one({"token": body.token}, {"$set": {"used": True}})
+    await db.login_attempts.delete_many({"identifier": rec["email"]})
+    return {"ok": True}
 
 
 def build_email_html(title: str, fields: list) -> str:
@@ -1019,6 +1071,7 @@ async def startup():
     await db.intervention_requests.create_index("created_at")
     await db.partner_applications.create_index("created_at")
     await db.availability_slots.create_index([("partner_email", 1), ("date", 1), ("fascia", 1)], unique=True)
+    await db.password_reset_tokens.create_index("expires_at", expireAfterSeconds=0)
 
 
 @app.on_event("shutdown")
