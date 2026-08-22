@@ -15,8 +15,8 @@ const TYPES = [
 ];
 
 const STEPS = ["I tuoi dati", "L'intervento", "Conferma"];
-const FASCE_ORARIE = ["Mattina (8–12)", "Pomeriggio (12–18)", "Sera (18–21)"];
-const INITIAL = { nome: "", cognome: "", telefono: "", email: "", indirizzo: "", tipo_intervento: "", descrizione: "", urgente: "no", data_preferita: "", fascia_oraria: "" };
+const FASCE_ORARIE = ["Mattina (8–13)", "Pomeriggio (13–18)"];
+const INITIAL = { nome: "", cognome: "", telefono: "", email: "", indirizzo: "", tipo_intervento: "", descrizione: "", urgente: "no", data_preferita: "", fascia_oraria: "", note_orario: "" };
 
 export default function RequestWizard({ open, onOpenChange }) {
   const [step, setStep] = useState(0);
@@ -215,7 +215,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                         </div>
                         <div>
                           <label className="brutalist-label">Fascia oraria (opzionale)</label>
-                          <div className="grid grid-cols-3 gap-2" data-testid="request-fascia-oraria-group">
+                          <div className="grid grid-cols-2 gap-2" data-testid="request-fascia-oraria-group">
                             {FASCE_ORARIE.map((f) => (
                               <button
                                 key={f}
@@ -232,6 +232,18 @@ export default function RequestWizard({ open, onOpenChange }) {
                           </div>
                         </div>
                       </div>
+                      <div>
+                        <label className="brutalist-label" htmlFor="req-note-orario">Note orario (opzionale)</label>
+                        <input
+                          id="req-note-orario"
+                          data-testid="request-note-orario-input"
+                          maxLength={120}
+                          value={form.note_orario}
+                          onChange={set("note_orario")}
+                          className="brutalist-input"
+                          placeholder="Es. solo dopo le 16, chiamare prima, ecc."
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -247,6 +259,7 @@ export default function RequestWizard({ open, onOpenChange }) {
                           ["Urgente", form.urgente === "si" ? "Sì" : "No"],
                           ...(form.data_preferita ? [["Data preferita", new Date(`${form.data_preferita}T00:00:00`).toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" })]] : []),
                           ...(form.fascia_oraria ? [["Fascia oraria", form.fascia_oraria]] : []),
+                          ...(form.note_orario ? [["Note orario", form.note_orario]] : []),
                           ["Problema", form.descrizione],
                         ].map(([k, v]) => (
                           <div key={k} className="flex gap-4 px-4 py-3 text-sm">

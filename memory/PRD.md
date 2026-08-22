@@ -68,6 +68,8 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 
 - Data/ora preferita + Revoca partner (21/08/2026): wizard richiesta step 2 con campi opzionali "Data preferita" (date, min=oggi, clamp JS su date passate) e "Fascia oraria" (chip Mattina 8–12 / Pomeriggio 12–18 / Sera 18–21, toggle al secondo click), visibili nel riepilogo step 3 solo se compilati; backend accetta data_preferita/fascia_oraria e li include nell'email admin; admin li vede nel dialog dettaglio richiesta. Revoca partner REVERSIBILE: PATCH /api/partners/{id}/revoke (approved=False + suspended=True, status "sospesa") e /reactivate (guard: 400 se non sospeso); partner sospeso = escluso da auto-assegnazione e partners-list, login bloccato con 403 "Account sospeso. Contatta COA per essere riattivato.", get_current_partner blocca sessioni attive; UI admin: badge "Sospeso" + "Riattiva", "Revoca" con window.confirm. Testato E2E (iteration_1.json): 11/12 pass — unico limite: submit form non automatizzabile da headless per score reCAPTCHA 0.1 (atteso, non un bug)
 
+- Revisione fasce orarie (22/08/2026): fasce ridotte a DUE — "Mattina (8–13)" e "Pomeriggio (13–18)" (eliminate Sera e fasce intermedie); aggiunto campo libero opzionale "Note orario" (max 120 char, placeholder "Es. solo dopo le 16, chiamare prima, ecc.") nello step 2; backend accetta/salva note_orario e lo include nell'email admin; fascia + note visibili nel riepilogo step 3 e nel dialog dettaglio admin. Verificato E2E via browser: 2 chip renderizzati, toggle OK, riepilogo mostra entrambi
+
 ## Da completare / note
 - P1: verifica dominio su Resend per notifiche a qualsiasi indirizzo e mittente brandizzato (es. noreply@coa-varese.it)
 - P1: email di conferma automatica al cliente

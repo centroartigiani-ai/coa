@@ -353,7 +353,7 @@ async def create_request(
     nome: str = Form(...), cognome: str = Form(...), telefono: str = Form(...), email: str = Form(...),
     indirizzo: str = Form(...), tipo_intervento: str = Form(...),
     descrizione: str = Form(...), urgente: str = Form("no"), comune: str = Form(""),
-    data_preferita: str = Form(""), fascia_oraria: str = Form(""),
+    data_preferita: str = Form(""), fascia_oraria: str = Form(""), note_orario: str = Form(""),
     privacy: str = Form(...), photo: UploadFile | None = File(None),
     recaptcha_token: str | None = Form(None),
 ):
@@ -366,7 +366,7 @@ async def create_request(
         "comune": comune, "indirizzo": indirizzo, "tipo_intervento": tipo_intervento,
         "descrizione": descrizione,
         "urgente": urgente.lower() in ("si", "sì", "true", "yes", "1"),
-        "data_preferita": data_preferita, "fascia_oraria": fascia_oraria,
+        "data_preferita": data_preferita, "fascia_oraria": fascia_oraria, "note_orario": note_orario,
         "photo": await read_upload(photo),
         "privacy_accepted_at": datetime.now(timezone.utc).isoformat(),
         "status": "nuova",
@@ -379,6 +379,7 @@ async def create_request(
         (["Urgente", "Sì" if doc["urgente"] else "No"]),
         *( [("Data preferita", data_preferita)] if data_preferita else [] ),
         *( [("Fascia oraria", fascia_oraria)] if fascia_oraria else [] ),
+        *( [("Note orario", note_orario)] if note_orario else [] ),
         ("Descrizione", descrizione),
     ])
     await notify_admin(f"[COA] Nuova richiesta: {tipo_intervento}", html, doc["photo"])

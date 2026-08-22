@@ -381,6 +381,7 @@ export default function AdminDashboard() {
                   ...(selected.comune ? [["Comune", selected.comune]] : []),
                   ...(selected.data_preferita ? [["Data preferita", fmtPrefDate(selected.data_preferita)]] : []),
                   ...(selected.fascia_oraria ? [["Fascia oraria", selected.fascia_oraria]] : []),
+                  ...(selected.note_orario ? [["Note orario", selected.note_orario]] : []),
                   ["Problema", selected.descrizione],
                 ].map(([k, v]) => (
                   <div key={k} className="flex gap-4 px-4 py-3 text-sm">
