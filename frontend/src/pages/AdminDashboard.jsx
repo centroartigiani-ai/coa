@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { Ban, Check, Loader2, LogOut, MessageCircle, Paperclip, RotateCcw, Star, Wrench } from "lucide-react";
+import { Ban, CalendarDays, Check, Loader2, LogOut, MessageCircle, Paperclip, RotateCcw, Star, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -17,6 +17,14 @@ const STATUS_COLORS = {
 
 const fmtDate = (iso) => new Date(iso).toLocaleString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 const fmtPrefDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", year: "numeric" });
+const FASCIA_LABELS = { mattina: "Mattina (8–13)", pomeriggio: "Pomeriggio (13–18)" };
+const fasciaKeyFromLabel = (label) => {
+  const l = (label || "").toLowerCase();
+  if (l.startsWith("mattina")) return "mattina";
+  if (l.startsWith("pomeriggio")) return "pomeriggio";
+  return "";
+};
+const isoDay = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 function waNumber(phone) {
   const digits = (phone || "").replace(/\D/g, "");
@@ -81,18 +89,37 @@ export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const [requests, setRequests] = useState([]);
   const [partners, setPartners] = useState([]);
-  const [partnersList, setPartnersList] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [slotDate, setSlotDate] = useState("");
+  const [slotFascia, setSlotFascia] = useState("");
+  const [slotPartners, setSlotPartners] = useState([]);
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([api.get("/requests"), api.get("/partners"), api.get("/admin/partners-list"), api.get("/reviews")])
-      .then(([r, p, pl, rv]) => { setRequests(r.data); setPartners(p.data); setPartnersList(pl.data); setReviews(rv.data); })
+    Promise.all([api.get("/requests"), api.get("/partners"), api.get("/reviews")])
+      .then(([r, p, rv]) => {
+        if (Array.isArray(r.data)) setRequests(r.data);
+        if (Array.isArray(p.data)) setPartners(p.data);
+        if (Array.isArray(rv.data)) setReviews(rv.data);
+      })
       .catch(() => toast.error("Errore nel caricamento dei dati"))
       .finally(() => setLoading(false));
   }, [user]);
+
+  useEffect(() => {
+    setSlotDate(selected?.data_preferita || "");
+    setSlotFascia(fasciaKeyFromLabel(selected?.fascia_oraria));
+  }, [selected?.id]);
+
+  useEffect(() => {
+    if (!selected || !slotDate || !slotFascia) { setSlotPartners([]); return; }
+    api.get(`/admin/partners-list?date=${slotDate}&fascia=${slotFascia}`)
+      .then(({ data }) => setSlotPartners(Array.isArray(data) ? data : []))
+      .catch(() => setSlotPartners([]));
+  }, [selected?.id, slotDate, slotFascia]);
 
   if (user === null) return <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center"><Loader2 className="w-8 h-8 text-[#FF5A00] animate-spin" /></div>;
   if (user === false) return <Navigate to="/admin/login" replace />;
@@ -101,15 +128,22 @@ export default function AdminDashboard() {
   const updatePar = (id, status) => setPartners((ps) => ps.map((p) => (p.id === id ? { ...p, status } : p)));
 
   const assignPartner = async (rid, email) => {
+    if (!slotDate || !slotFascia) {
+      toast.error("Seleziona prima giorno e fascia oraria.");
+      return;
+    }
+    setAssigning(true);
     try {
-      await api.patch(`/requests/${rid}/assign`, { partner_email: email });
-      const p = partnersList.find((x) => x.email === email);
-      const patch = { assigned_to: email, assigned_name: p?.name || email, assignment_status: "assegnata" };
+      await api.patch(`/requests/${rid}/assign`, { partner_email: email, date: slotDate, fascia: slotFascia });
+      const p = slotPartners.find((x) => x.email === email);
+      const patch = { assigned_to: email, assigned_name: p?.name || email, assignment_status: "assegnata", assigned_date: slotDate, assigned_fascia: slotFascia };
       setRequests((rs) => rs.map((r) => (r.id === rid ? { ...r, ...patch } : r)));
       setSelected((s) => (s && s.id === rid ? { ...s, ...patch } : s));
-      toast.success("Richiesta assegnata");
+      toast.success(`Assegnato: ${fmtPrefDate(slotDate)} — ${FASCIA_LABELS[slotFascia]}`);
     } catch (err) {
       toast.error(formatApiError(err.response?.data?.detail));
+    } finally {
+      setAssigning(false);
     }
   };
 
@@ -224,20 +258,18 @@ export default function AdminDashboard() {
                             <div data-testid={`assigned-to-${r.id}`}>
                               <p className="text-xs font-medium text-white">{r.assigned_name || r.assigned_to}</p>
                               <p className="text-[10px] uppercase tracking-wider text-white/40 mt-0.5">{r.assignment_status}</p>
+                              {r.assigned_date && (
+                                <p data-testid={`assigned-slot-${r.id}`} className="text-[10px] text-[#FF5A00] mt-0.5">{fmtPrefDate(r.assigned_date)} · {FASCIA_LABELS[r.assigned_fascia] || r.assigned_fascia}</p>
+                              )}
                             </div>
                           ) : (
-                            <Select onValueChange={(v) => assignPartner(r.id, v)}>
-                              <SelectTrigger data-testid={`assign-select-${r.id}`} className="h-8 w-44 text-xs border border-[#FF5A00]/40 text-[#FF5A00] bg-[#FF5A00]/10 rounded-none">
-                                <SelectValue placeholder="Da assegnare" />
-                              </SelectTrigger>
-                              <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                                {partnersList.map((p) => (
-                                  <SelectItem key={p.email} value={p.email} className="focus:bg-[#FF5A00] focus:text-white text-xs">
-                                    {p.name} — {p.professione}{p.premium ? " ★" : ""}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                            <button
+                              data-testid={`assign-open-${r.id}`}
+                              onClick={() => setSelected(r)}
+                              className="h-8 px-4 text-xs font-medium border border-[#FF5A00]/40 text-[#FF5A00] bg-[#FF5A00]/10 hover:bg-[#FF5A00]/20 transition-colors"
+                            >
+                              Da assegnare
+                            </button>
                           )}
                         </Td>
                         <Td onClick={(e) => e.stopPropagation()}><StatusSelect item={r} endpoint="requests" onUpdate={updateReq} testid={`status-select-${r.id}`} /></Td>
@@ -382,6 +414,7 @@ export default function AdminDashboard() {
                   ...(selected.data_preferita ? [["Data preferita", fmtPrefDate(selected.data_preferita)]] : []),
                   ...(selected.fascia_oraria ? [["Fascia oraria", selected.fascia_oraria]] : []),
                   ...(selected.note_orario ? [["Note orario", selected.note_orario]] : []),
+                  ...(selected.assigned_date ? [["Slot assegnato", `${fmtPrefDate(selected.assigned_date)} — ${FASCIA_LABELS[selected.assigned_fascia] || selected.assigned_fascia || ""}`]] : []),
                   ["Problema", selected.descrizione],
                 ].map(([k, v]) => (
                   <div key={k} className="flex gap-4 px-4 py-3 text-sm">
@@ -405,16 +438,61 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-2">Assegnazione</p>
                   {selected.assigned_to && (
-                    <p data-testid="detail-current-assignment" className="text-sm text-white mb-2">{selected.assigned_name || selected.assigned_to} <span className="text-white/40 text-xs">({selected.assignment_status})</span></p>
+                    <p data-testid="detail-current-assignment" className="text-sm text-white mb-2">
+                      {selected.assigned_name || selected.assigned_to} <span className="text-white/40 text-xs">({selected.assignment_status})</span>
+                      {selected.assigned_date && (
+                        <span data-testid="detail-assigned-slot" className="block text-xs text-[#FF5A00] mt-1">
+                          {fmtPrefDate(selected.assigned_date)} — {FASCIA_LABELS[selected.assigned_fascia] || selected.assigned_fascia}
+                        </span>
+                      )}
+                    </p>
                   )}
-                  <Select onValueChange={(v) => assignPartner(selected.id, v)}>
+                  {(selected.data_preferita || selected.fascia_oraria || selected.note_orario) && (
+                    <div data-testid="detail-client-preferences" className="mb-3 border border-[#FF5A00]/30 bg-[#FF5A00]/5 p-3 text-xs text-white/70">
+                      <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#FF5A00] mb-1">Preferenze cliente</p>
+                      <p>{selected.data_preferita ? fmtPrefDate(selected.data_preferita) : "Nessuna data"} · {selected.fascia_oraria || "nessuna fascia"}</p>
+                      {selected.note_orario && <p className="mt-1 text-white/50">Note: {selected.note_orario}</p>}
+                    </div>
+                  )}
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <input
+                      type="date"
+                      data-testid="assign-date-input"
+                      min={isoDay(new Date())}
+                      max={isoDay(new Date(Date.now() + 21 * 86400000))}
+                      value={slotDate}
+                      onChange={(e) => setSlotDate(e.target.value)}
+                      className="h-9 w-full text-xs bg-[#1A1A1A] border border-white/20 text-white px-2 rounded-none"
+                      style={{ colorScheme: "dark" }}
+                    />
+                    <div className="grid grid-cols-2 gap-1" data-testid="assign-fascia-group">
+                      {Object.entries(FASCIA_LABELS).map(([k, l]) => (
+                        <button
+                          key={k}
+                          type="button"
+                          data-testid={`assign-fascia-${k}`}
+                          onClick={() => setSlotFascia(k)}
+                          className={`px-1 py-2 text-[10px] font-medium border transition-colors ${slotFascia === k ? "border-[#FF5A00] bg-[#FF5A00]/15 text-white" : "border-white/15 text-white/50 hover:border-white/40"}`}
+                        >
+                          {l}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <Select onValueChange={(v) => assignPartner(selected.id, v)} disabled={!slotDate || !slotFascia || assigning}>
                     <SelectTrigger data-testid="detail-assign-select" className="h-9 w-full text-xs border border-[#FF5A00]/40 text-[#FF5A00] bg-[#FF5A00]/10 rounded-none">
-                      <SelectValue placeholder={selected.assigned_to ? "Cambia partner" : "Assegna a un partner"} />
+                      <SelectValue placeholder={!slotDate || !slotFascia ? "Prima scegli giorno e fascia" : selected.assigned_to ? "Cambia partner" : "Assegna a un partner"} />
                     </SelectTrigger>
                     <SelectContent className="bg-[#1A1A1A] border-white/10 text-white">
-                      {partnersList.map((p) => (
-                        <SelectItem key={p.email} value={p.email} className="focus:bg-[#FF5A00] focus:text-white text-xs">
-                          {p.name} — {p.professione}{p.premium ? " ★" : ""}
+                      {slotPartners.map((p) => (
+                        <SelectItem
+                          key={p.email}
+                          value={p.email}
+                          disabled={p.slot_status && p.slot_status !== "libero"}
+                          data-testid={`assign-partner-option-${p.email}`}
+                          className="focus:bg-[#FF5A00] focus:text-white text-xs disabled:opacity-40"
+                        >
+                          {p.name} — {p.professione}{p.premium ? " ★" : ""}{p.slot_status === "occupato" ? " (occupato)" : p.slot_status === "assegnato" ? " (già assegnato)" : ""}
                         </SelectItem>
                       ))}
                     </SelectContent>

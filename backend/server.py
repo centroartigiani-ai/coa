@@ -44,6 +44,22 @@ JWT_ALGORITHM = "HS256"
 STATUSES = ["nuova", "in_lavorazione", "completata"]
 MAX_UPLOAD = 5 * 1024 * 1024
 
+FASCE = ("mattina", "pomeriggio")
+FASCIA_LABELS = {"mattina": "Mattina (8–13)", "pomeriggio": "Pomeriggio (13–18)"}
+SLOT_HORIZON_DAYS = 21  # settimana corrente + 2 successive
+
+
+def fascia_key(label: str) -> str:
+    low = (label or "").strip().lower()
+    for k in FASCE:
+        if low.startswith(k):
+            return k
+    return ""
+
+
+async def free_assigned_slot(request_id: str):
+    await db.availability_slots.delete_many({"request_id": request_id, "status": "assegnato"})
+
 # Tipi MIME consentiti per gli upload (verificati sui byte reali, non solo estensione/Content-Type dichiarato)
 ALLOWED_UPLOAD_MIME = {
     "image/jpeg": [b"\xff\xd8\xff"],
@@ -178,7 +194,7 @@ class LoginBody(BaseModel):
 @api_router.post("/auth/login")
 async def login(body: LoginBody, request: Request, response: Response):
     email = body.email.lower()
-    identifier = f"{request.client.host}:{email}"
+    identifier = email
     await check_lockout(identifier)
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(body.password, user["password_hash"]):
@@ -335,6 +351,7 @@ async def complete_request(rid: str):
     if not doc:
         raise HTTPException(status_code=404, detail="Elemento non trovato")
     update = {"status": "completata"}
+    await free_assigned_slot(rid)
     if not doc.get("review_token"):
         token = str(uuid.uuid4())
         update["review_token"] = token
@@ -403,10 +420,23 @@ async def create_request(
     partner = await find_partner(tipo_intervento, indirizzo)
     assigned = False
     if partner:
-        await db.intervention_requests.update_one({"id": doc["id"]}, {"$set": {
+        update = {
             "assigned_to": partner["email"], "assigned_name": partner["name"],
             "assignment_status": "assegnata", "assigned_at": datetime.now(timezone.utc).isoformat(),
-        }})
+        }
+        fk = fascia_key(fascia_oraria)
+        if data_preferita and fk:
+            clash = await db.availability_slots.find_one(
+                {"partner_email": partner["email"], "date": data_preferita, "fascia": fk})
+            if not clash:
+                await db.availability_slots.insert_one({
+                    "id": str(uuid.uuid4()), "partner_email": partner["email"],
+                    "date": data_preferita, "fascia": fk, "status": "assegnato",
+                    "request_id": doc["id"], "created_at": datetime.now(timezone.utc).isoformat(),
+                })
+                update["assigned_date"] = data_preferita
+                update["assigned_fascia"] = fk
+        await db.intervention_requests.update_one({"id": doc["id"]}, {"$set": update})
         assigned = True
         await notify_partner_whatsapp(partner["email"], doc)
         assign_html = build_email_html("Nuova richiesta assegnata a te", [
@@ -598,6 +628,53 @@ async def partner_whatsapp(body: WhatsappBody, user=Depends(get_current_partner)
     return {"ok": True}
 
 
+def parse_slot_date(value: str):
+    try:
+        return datetime.strptime(value, "%Y-%m-%d").date()
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=400, detail="Data non valida")
+
+
+@api_router.get("/partner/availability")
+async def partner_availability(start: str, user=Depends(get_current_partner)):
+    start_date = parse_slot_date(start)
+    end_date = (start_date + timedelta(days=6)).isoformat()
+    slots = await db.availability_slots.find(
+        {"partner_email": user["email"], "date": {"$gte": start_date.isoformat(), "$lt": end_date}},
+        {"_id": 0, "id": 0, "partner_email": 0, "created_at": 0},
+    ).to_list(100)
+    return slots
+
+
+class SlotBody(BaseModel):
+    date: str
+    fascia: str
+    occupied: bool
+
+
+@api_router.patch("/partner/availability")
+async def partner_toggle_slot(body: SlotBody, user=Depends(get_current_partner)):
+    if body.fascia not in FASCE:
+        raise HTTPException(status_code=400, detail="Fascia oraria non valida")
+    slot_date = parse_slot_date(body.date)
+    today = datetime.now(timezone.utc).date()
+    if slot_date < today or slot_date > today + timedelta(days=SLOT_HORIZON_DAYS):
+        raise HTTPException(status_code=400, detail="Data fuori dal periodo gestibile")
+    key = {"partner_email": user["email"], "date": body.date, "fascia": body.fascia}
+    existing = await db.availability_slots.find_one(key)
+    if existing and existing.get("status") == "assegnato":
+        raise HTTPException(status_code=400, detail="Slot assegnato dalla centrale operativa: non modificabile")
+    if body.occupied:
+        await db.availability_slots.update_one(key, {"$set": {
+            **key, "id": (existing or {}).get("id", str(uuid.uuid4())),
+            "status": "occupato", "request_id": None,
+            "created_at": (existing or {}).get("created_at", datetime.now(timezone.utc).isoformat()),
+        }}, upsert=True)
+    else:
+        await db.availability_slots.delete_one(key)
+    return {"ok": True}
+
+
 class AssignmentStatusBody(BaseModel):
     status: str
 
@@ -619,14 +696,19 @@ async def partner_update_assignment(rid: str, body: AssignmentStatusBody, user=D
 
 
 @api_router.get("/admin/partners-list")
-async def admin_partners_list(user=Depends(require_admin)):
+async def admin_partners_list(user=Depends(require_admin), date: str = "", fascia: str = ""):
     partners = await db.users.find({"role": "partner", "approved": True}, {"_id": 0, "password_hash": 0}).to_list(500)
     apps = {a["email"].lower(): a for a in await db.partner_applications.find({}, {"_id": 0, "attachment": 0}).to_list(500)}
+    busy = {}
+    if date and fascia in FASCE:
+        slots = await db.availability_slots.find({"date": date, "fascia": fascia}, {"_id": 0}).to_list(1000)
+        busy = {s["partner_email"]: s["status"] for s in slots}
     out = []
     for p in partners:
         a = apps.get(p["email"], {})
         out.append({"email": p["email"], "name": p.get("name", ""), "premium": bool(p.get("premium")),
-                    "professione": a.get("professione", ""), "zone_coperte": a.get("zone_coperte", "")})
+                    "professione": a.get("professione", ""), "zone_coperte": a.get("zone_coperte", ""),
+                    "slot_status": busy.get(p["email"], "libero") if busy or (date and fascia) else None})
     return out
 
 
@@ -682,19 +764,42 @@ async def reactivate_partner(doc_id: str, user=Depends(require_admin)):
 
 class AssignBody(BaseModel):
     partner_email: str
+    date: str
+    fascia: str
 
 
 @api_router.patch("/requests/{doc_id}/assign")
 async def assign_request(doc_id: str, body: AssignBody, user=Depends(require_admin)):
+    if body.fascia not in FASCE:
+        raise HTTPException(status_code=400, detail="Fascia oraria non valida")
+    slot_date = parse_slot_date(body.date)
+    if slot_date < datetime.now(timezone.utc).date():
+        raise HTTPException(status_code=400, detail="Non puoi assegnare una data passata")
     partner = await db.users.find_one({"email": body.partner_email.lower(), "role": "partner", "approved": True})
     if not partner:
         raise HTTPException(status_code=404, detail="Partner non trovato o non approvato")
-    res = await db.intervention_requests.update_one({"id": doc_id}, {"$set": {
+    req_doc = await db.intervention_requests.find_one({"id": doc_id})
+    if not req_doc:
+        raise HTTPException(status_code=404, detail="Richiesta non trovata")
+    clash = await db.availability_slots.find_one(
+        {"partner_email": partner["email"], "date": body.date, "fascia": body.fascia})
+    if clash and clash.get("request_id") != doc_id:
+        stato = "già assegnato a un altro intervento" if clash.get("status") == "assegnato" else "occupato (impegno privato)"
+        raise HTTPException(status_code=409, detail=f"Slot non disponibile: {partner.get('name', 'il partner')} è {stato} in questa fascia")
+    await free_assigned_slot(doc_id)
+    await db.availability_slots.update_one(
+        {"partner_email": partner["email"], "date": body.date, "fascia": body.fascia},
+        {"$set": {
+            "id": (clash or {}).get("id", str(uuid.uuid4())),
+            "partner_email": partner["email"], "date": body.date, "fascia": body.fascia,
+            "status": "assegnato", "request_id": doc_id,
+            "created_at": (clash or {}).get("created_at", datetime.now(timezone.utc).isoformat()),
+        }}, upsert=True)
+    await db.intervention_requests.update_one({"id": doc_id}, {"$set": {
         "assigned_to": partner["email"], "assigned_name": partner.get("name", ""),
         "assignment_status": "assegnata", "assigned_at": datetime.now(timezone.utc).isoformat(),
+        "assigned_date": body.date, "assigned_fascia": body.fascia,
     }})
-    if res.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Richiesta non trovata")
     req_doc = await db.intervention_requests.find_one({"id": doc_id})
     await notify_partner_whatsapp(partner["email"], req_doc)
     return {"ok": True}
@@ -821,6 +926,7 @@ async def startup():
     await db.login_attempts.create_index("identifier")
     await db.intervention_requests.create_index("created_at")
     await db.partner_applications.create_index("created_at")
+    await db.availability_slots.create_index([("partner_email", 1), ("date", 1), ("fascia", 1)], unique=True)
 
 
 @app.on_event("shutdown")

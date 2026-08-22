@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { CheckCircle2, Loader2, LogOut, MessageCircle, Star, Wrench } from "lucide-react";
+import { CalendarDays, CheckCircle2, Loader2, LogOut, MessageCircle, Star, Wrench } from "lucide-react";
 import { toast } from "sonner";
 import { api, formatApiError } from "@/lib/api";
 import { useAuth } from "@/context/AuthContext";
+import { AvailabilityCalendar } from "@/components/partner/AvailabilityCalendar";
+
+const FASCIA_LABELS = { mattina: "Mattina (8–13)", pomeriggio: "Pomeriggio (13–18)" };
+const fmtSlotDate = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString("it-IT", { weekday: "short", day: "numeric", month: "short" });
 
 const ASSIGN_LABELS = { assegnata: "Da prendere in carico", accettata: "Presa in carico", completata: "Completata" };
 const ASSIGN_COLORS = {
@@ -25,6 +29,7 @@ export default function PartnerDashboard() {
   const [waKey, setWaKey] = useState("");
   const [waSaving, setWaSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [calRefresh, setCalRefresh] = useState(0);
 
   useEffect(() => {
     if (!user || user.role !== "partner") return;
@@ -58,6 +63,7 @@ export default function PartnerDashboard() {
   const act = async (rid, status) => {    try {
       await api.patch(`/partner/assignments/${rid}`, { status });
       setAssignments((as) => as.map((a) => (a.id === rid ? { ...a, assignment_status: status } : a)));
+      if (status === "completata") setCalRefresh((k) => k + 1);
       toast.success(status === "accettata" ? "Richiesta presa in carico" : "Intervento completato. Grazie!");
     } catch (err) {
       toast.error(formatApiError(err.response?.data?.detail));
@@ -137,6 +143,8 @@ export default function PartnerDashboard() {
               </div>
             </div>
 
+            <AvailabilityCalendar refreshKey={calRefresh} />
+
             <h2 className="mt-12 mb-6 font-display text-2xl font-bold">Interventi assegnati a te</h2>
             {assignments.length === 0 ? (
               <p data-testid="assignments-empty" className="border border-[#F5F1EA]/10 p-10 text-center text-[#F5F1EA]/40">
@@ -161,6 +169,12 @@ export default function PartnerDashboard() {
                         </div>
                       </div>
                       <p className="mt-4 text-sm text-[#F5F1EA]/70">{a.descrizione}</p>
+                      {a.assigned_date && (
+                        <p data-testid={`assignment-slot-${a.id}`} className="mt-3 inline-flex items-center gap-2 text-xs font-medium text-[#F5F1EA] border border-[#F5F1EA]/30 bg-[#F5F1EA]/10 px-3 py-1.5">
+                          <CalendarDays className="w-3.5 h-3.5 text-[#F2A93B]" />
+                          {fmtSlotDate(a.assigned_date)} — {FASCIA_LABELS[a.assigned_fascia] || a.assigned_fascia}
+                        </p>
+                      )}
                       <div className="mt-5 pt-5 border-t border-[#F5F1EA]/10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm">
                         <span className="text-[#F5F1EA]/80 font-medium">{a.nome} {a.cognome}</span>
                         <span className="font-mono-data text-xs text-[#F5F1EA]/50">{a.telefono}</span>

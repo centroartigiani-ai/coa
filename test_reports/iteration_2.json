@@ -1,0 +1,38 @@
+{
+  "summary": "Full test of the OPERATOR AVAILABILITY CALENDAR phase. Backend: new pytest suite (/app/backend/backend_test.py -> tests/backend_test.py, 21 tests) against the public preview URL covering partner availability GET/PATCH (toggle occupato/libero, invalid fascia 400, past date 400, beyond 21-day horizon 400, bad start format 400, 401 without auth, no _id leaks), admin assignment with mandatory slot (200 + persistence of assigned_date/assigned_fascia/assignment_status, 422 without date, 400 invalid fascia, 400 past date, 404 unknown partner/request), 409 double-booking of the same slot, 400 when a partner is 'occupato' in that slot, partner cannot toggle an 'assegnato' slot, slot freed on partner completion, on admin completion and on reassignment, partners-list slot_status. Result: 19 passed, 1 skipped (CORS preflight is answered by the Cloudflare edge, verified directly on the backend instead), 1 failed (brute-force lockout does not trigger through the public ingress - see rca). Frontend E2E (Playwright, 1920x1600): partner calendar (grid 6x2, week label, prev disabled at current week, next disabled at week+2, past cells disabled, toggle Libero<->Occupato with toast, legend, assigned cell locked with padlock and not clickable), admin request table ('Da assegnare' button opens the detail dialog; assigned rows show partner + orange date-fascia line), detail dialog (client preferences box, date+fascia prefilled from client preferences, select disabled until day+fascia are set, partner options suffixed '(occupato)'/'(gia assegnato)' and disabled, 'Slot assegnato' field row, detail-assigned-slot), full flow assign -> partner badge assignment-slot-{id} 'lun 24 ago - Mattina (8-13)' -> accept -> complete -> calendar cell back to Libero and clickable. Conflict handling: with a forced 409 from the API the admin gets the toast 'Slot non disponibile: ...' and the row stays 'Da assegnare'. All test data removed; luca.prati@test.it left ACTIVE with zero residual slots.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/auth/login", "issue": "Brute-force lockout ineffective from the internet: the lockout key is f\"{request.client.host}:{email}\" and the k8s/Cloudflare ingress presents rotating proxy IPs (observed 10.231.129.137 and .138 for the same client), so 6 consecutive wrong passwords all returned 401 instead of 429 (counters split: 4 + 2). Works when hitting the backend directly. Suggest keying on the email only (or on the first X-Forwarded-For hop)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "AdminDashboard - partners-list fetch", "issue": "setSlotPartners(data) has no Array.isArray guard: if /admin/partners-list returns a non-array payload (e.g. an error object) the whole admin page white-screens with 'TypeError: slotPartners.map is not a function' (reproduced by stubbing the response). Same pattern for setRequests/setPartners/setReviews.", "selector": "[data-testid=\"detail-assign-select\"]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin request detail dialog", "issues": ["The assignment day uses the native browser date input (renders as 08/24/2026 in US format inside an Italian UI) instead of the shadcn calendar/popover used elsewhere - inconsistent and locale-confusing", "The date input + 2 fascia chips + select are cramped in the narrow left column; 'Pomeriggio (13-18)' chip label wraps"]},
+      {"screen": "Partner availability calendar", "issues": ["'Assegnato' cells use light grey on light-grey (#F5F1EA/15 bg with #F5F1EA text) - readable but the lowest-contrast state of the three; consider a slightly stronger border/label"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/backend_test.py", "/app/backend/tests/test_local_auth_infra.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Make the login lockout identifier independent of the rotating ingress IP (key on email, or on the first X-Forwarded-For hop) - currently 5-attempt lockout can be bypassed from the public URL",
+    "Add an Array.isArray guard (or an error state) around setSlotPartners/setRequests/setPartners/setReviews to avoid a full admin crash on an unexpected payload",
+    "Optional: replace the native date input in the assignment box with the shadcn calendar for locale consistency"
+  ],
+  "critical_code_review_comments": [
+    "server.py free_assigned_slot() deletes by request_id + status 'assegnato' only - correct, but assign_request calls it before the clash check result is applied; the clash check happens first so behaviour is right. Keep the unique index (partner_email,date,fascia) as the last line of defence.",
+    "AvailabilityCalendar computes 'past' with a plain string compare on ISO dates (fine) but the horizon limit (MAX_WEEK_OFFSET=2 / SLOT_HORIZON_DAYS=21) is duplicated in FE and BE - extract/share the constant to avoid drift.",
+    "AdminDashboard.jsx is 517 lines and the assignment logic is inline; consider extracting an AssignSlotPanel component."
+  ],
+  "updated_files": ["/app/backend/tests/backend_test.py", "/app/backend/tests/test_local_auth_infra.py"],
+  "success_rate": {"backend": "95% (19/20 executed tests pass; 1 known ingress-related lockout gap)", "frontend": "100% of calendar/assignment flows verified"},
+  "seed_data_creation": "2 intervention_requests seeded directly in Mongo (TESTUI_PREF with data_preferita 2026-08-24 + 'Mattina (8-13)' + note_orario, TESTUI_NOPREF) plus temporary availability_slots for luca.prati; ALL deleted afterwards. Verified: 0 test requests, 0 availability slots, luca.prati@test.it approved=true/suspended=false.",
+  "should_call_test_agent_after_fix": false,
+  "should_main_agent_self_test": true,
+  "test_credentials": "admin@coa-varese.it / CoaAdmin2026! ; luca.prati@test.it / partner123 (left ACTIVE)",
+  "context_for_next_testing_agent": "Regression suite lives in /app/backend/tests/ (backend_test.py = public-URL API tests incl. calendar/slots; test_local_auth_infra.py = localhost-only CORS + lockout checks). Fixtures clean their own slots/requests. Note test isolation: pytest.ini runs xdist by class, so TestPartnerAvailability uses week+2 dates (W2A/W2B) while TestSlotAssignment uses next-week dates (D1..D3) to avoid slot collisions on the same partner. Public form submit remains blocked by reCAPTCHA - seed requests in Mongo. Verified data-testids: slot-{YYYY-MM-DD}-{mattina|pomeriggio} with data-status, calendar-week-prev/next/label, assignment-slot-{id}, accept-button-{id}, complete-button-{id}, assign-open-{id}, assigned-to-{id}, assigned-slot-{id}, detail-client-preferences, detail-assigned-slot, assign-date-input, assign-fascia-mattina/pomeriggio, detail-assign-select, assign-partner-option-{email}.",
+  "rca_of_the_issue": "Lockout failure RCA: db.login_attempts documents observed as '10.231.129.137:qa-lock-x@test.it' (count 4) and '10.231.129.138:qa-lock-x@test.it' (count 2) for one 6-attempt burst -> request.client.host is the ingress proxy pod IP which rotates, splitting the counter, so count never reaches 5 in a single document. Direct localhost:8001 run returns 429 as expected (test_local_auth_infra.test_lockout_local passes). Admin white-screen RCA: AdminDashboard line 116 setSlotPartners(data) then line 483 slotPartners.map -> uncaught TypeError when data is not an array."
+}
