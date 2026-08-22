@@ -25,6 +25,7 @@ export default function Footer({ onPartner }) {
               <li><button data-testid="footer-chi-siamo" onClick={() => go("#come-funziona")} className="text-white/70 hover:text-[#F2A93B] transition-colors">Chi siamo</button></li>
               <li><button data-testid="footer-servizi" onClick={() => go("#servizi")} className="text-white/70 hover:text-[#F2A93B] transition-colors">Servizi</button></li>
               <li><button data-testid="footer-partner" onClick={onPartner} className="text-white/70 hover:text-[#F2A93B] transition-colors">Diventa Partner</button></li>
+              <li><a data-testid="footer-area-partner" href="/partner/login" className="text-white/70 hover:text-[#F2A93B] transition-colors">Area Partner</a></li>
               <li><button data-testid="footer-contatti" onClick={() => go("#faq")} className="text-white/70 hover:text-[#F2A93B] transition-colors">Contatti</button></li>
             </ul>
           </div>

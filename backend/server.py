@@ -57,6 +57,19 @@ def fascia_key(label: str) -> str:
     return ""
 
 
+def slot_label(doc: dict) -> str:
+    d = doc.get("assigned_date")
+    if not d:
+        return ""
+    fascia = FASCIA_LABELS.get(doc.get("assigned_fascia"), doc.get("assigned_fascia") or "")
+    try:
+        y, m, g = d.split("-")
+        it = f"{g}/{m}/{y}"
+    except ValueError:
+        it = d
+    return f"{it} — {fascia}" if fascia else it
+
+
 async def free_assigned_slot(request_id: str):
     await db.availability_slots.delete_many({"request_id": request_id, "status": "assegnato"})
 
@@ -292,6 +305,7 @@ async def notify_partner_whatsapp(partner_email: str, req: dict):
         import urllib.parse
 
         import requests
+        slot = slot_label(req)
         msg = (
             "NUOVO INTERVENTO ASSEGNATO — COA\n"
             f"Tipo: {req.get('tipo_intervento')}\n"
@@ -299,7 +313,8 @@ async def notify_partner_whatsapp(partner_email: str, req: dict):
             f"Cliente: {req.get('nome')} {req.get('cognome')}\n"
             f"Telefono cliente: {req.get('telefono')}\n"
             f"Urgente: {'SI' if req.get('urgente') else 'No'}\n"
-            f"Gestisci l'intervento: {os.environ.get('PUBLIC_URL')}/partner/login"
+            + (f"Giorno e fascia: {slot}\n" if slot else "")
+            + f"Gestisci l'intervento: {os.environ.get('PUBLIC_URL')}/partner/login"
         )
         url = "https://api.callmebot.com/whatsapp.php?" + urllib.parse.urlencode(
             {"phone": phone, "text": msg, "apikey": apikey}
@@ -447,6 +462,7 @@ async def create_request(
         await notify_partner_whatsapp(partner["email"], doc)
         assign_html = build_email_html("Nuova richiesta assegnata a te", [
             ("Tipo", tipo_intervento), ("Indirizzo", indirizzo),
+            *( [("Giorno e fascia", slot_label(update))] if update.get("assigned_date") else [] ),
             ("Urgente", "Sì" if doc["urgente"] else "No"), ("Problema", descrizione),
             ("Accedi", f'<a href="{os.environ.get("PUBLIC_URL")}/partner/login" style="color:#F2A93B;">Vai alla tua area partner</a>'),
         ])
@@ -696,10 +712,35 @@ async def partner_update_assignment(rid: str, body: AssignmentStatusBody, user=D
     )
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Assegnazione non trovata")
+    partner_name = user.get("name") or user["email"]
+    req = await db.intervention_requests.find_one({"id": rid})
     if body.status == "accettata":
         await db.intervention_requests.update_one({"id": rid}, {"$set": {"status": "in_lavorazione"}})
+        html = build_email_html(f"Intervento preso in carico — {req['tipo_intervento']}", [
+            ("Partner", partner_name),
+            ("Cliente", f"{req['nome']} {req['cognome']}"),
+            ("Indirizzo", req.get("indirizzo", "")),
+            ("Giorno e fascia", slot_label(req) or "—"),
+        ])
+        await notify_admin(f"[COA] Presa in carico: {req['tipo_intervento']} — {partner_name}", html)
+        await notify_whatsapp(
+            f"PRESA IN CARICO — COA\nPartner: {partner_name}\nIntervento: {req['tipo_intervento']}\n"
+            f"Cliente: {req['nome']} {req['cognome']}\nGiorno e fascia: {slot_label(req) or '—'}"
+        )
     elif body.status == "completata":
         await complete_request(rid)
+        html = build_email_html(f"Intervento completato — {req['tipo_intervento']}", [
+            ("Partner", partner_name),
+            ("Cliente", f"{req['nome']} {req['cognome']}"),
+            ("Indirizzo", req.get("indirizzo", "")),
+            ("Giorno e fascia", slot_label(req) or "—"),
+            ("Nota", "Lo slot dell'operatore è tornato libero. Al cliente è stata inviata la richiesta di recensione."),
+        ])
+        await notify_admin(f"[COA] Completato: {req['tipo_intervento']} — {partner_name}", html)
+        await notify_whatsapp(
+            f"INTERVENTO COMPLETATO — COA\nPartner: {partner_name}\nIntervento: {req['tipo_intervento']}\n"
+            f"Cliente: {req['nome']} {req['cognome']}\nGiorno e fascia: {slot_label(req) or '—'}"
+        )
     return {"ok": True}
 
 
@@ -846,6 +887,13 @@ async def assign_request(doc_id: str, body: AssignBody, user=Depends(require_adm
     }})
     req_doc = await db.intervention_requests.find_one({"id": doc_id})
     await notify_partner_whatsapp(partner["email"], req_doc)
+    assign_html = build_email_html("Nuovo intervento assegnato a te", [
+        ("Tipo", req_doc["tipo_intervento"]), ("Indirizzo", req_doc.get("indirizzo", "")),
+        ("Giorno e fascia", slot_label(req_doc)),
+        ("Urgente", "Sì" if req_doc.get("urgente") else "No"), ("Problema", req_doc.get("descrizione", "")),
+        ("Accedi", f'<a href="{os.environ.get("PUBLIC_URL")}/partner/login" style="color:#F2A93B;">Vai alla tua area partner per prenderlo in carico</a>'),
+    ])
+    await send_email(partner["email"], f"[COA] Nuovo intervento assegnato: {req_doc['tipo_intervento']}", assign_html)
     return {"ok": True}
 
 

@@ -51,6 +51,13 @@ export default function Navbar({ onRequest }) {
         </nav>
 
         <div className="flex items-center gap-3">
+          <a
+            data-testid="nav-partner-area"
+            href="/partner/login"
+            className="hidden sm:inline-flex items-center text-sm text-white/50 hover:text-white border border-white/15 hover:border-white/40 px-4 py-2.5 transition-colors"
+          >
+            Area Partner
+          </a>
           <button
             data-testid="nav-request-cta"
             onClick={onRequest}
@@ -71,6 +78,13 @@ export default function Navbar({ onRequest }) {
               {l.label}
             </button>
           ))}
+          <a
+            data-testid="nav-partner-area-mobile"
+            href="/partner/login"
+            className="text-left text-lg text-white/60 hover:text-white transition-colors border border-white/15 px-4 py-3"
+          >
+            Area Partner
+          </a>
           <button
             data-testid="nav-request-cta-mobile"
             onClick={() => { setOpen(false); onRequest(); }}
