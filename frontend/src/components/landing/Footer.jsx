@@ -47,7 +47,10 @@ export default function Footer({ onPartner }) {
           </div>
         </div>
         <div className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-4 text-xs text-white/30">
-          <p>© 2026 COA — Centrale Operativa Artigiani. Tutti i diritti riservati.</p>
+          <div>
+            <p data-testid="footer-legal-identity">COA — Centrale Operativa Artigiani | Andrea Pinna | Varese (VA)</p>
+            <p className="mt-1">© 2026 COA — Centrale Operativa Artigiani. Tutti i diritti riservati.</p>
+          </div>
           <a data-testid="footer-admin-link" href="/admin/login" className="hover:text-white/60 transition-colors">Area riservata</a>
         </div>
       </div>

@@ -78,6 +78,8 @@ Landing page + piattaforma lead-capture per COA: mettere in contatto privati, co
 
 - Reset password partner (22/08/2026): flusso "Password dimenticata" completo — POST /api/auth/forgot-password (risposta identica per email esistenti/non, anti-enumeration; rate-limit 5 richieste/15min via login_attempts con chiave reset:{email}; token secrets.token_urlsafe(32) in collection password_reset_tokens, scadenza 1h, indice TTL expireAfterSeconds, monouso) + email Resend brandizzata con link /partner/reset-password/{token}; POST /api/auth/reset-password (min 8 char, 400 token usato/scaduto, aggiorna hash bcrypt, invalida token, sblocca eventuale lockout login). Frontend: link "Password dimenticata?" in PartnerLogin con form inline, nuova pagina PartnerResetPassword (password+conferma, successo → login). Funziona anche per l'admin. Testato: ciclo completo forgot→email→reset→login verificato via API (email realmente recapitata grazie a dominio verificato), token monouso, nessuna enumeration, password partner di test ripristinata a partner123; 30 pytest verdi
 
+- Dati titolare GDPR (22/08/2026): Privacy Policy sezione 1 aggiornata — titolare persona fisica Andrea Pinna, denominazione COA — Centrale Operativa Artigiani, sede operativa Varese (VA) (senza indirizzo civico), email centro.artigiani@gmail.com, nota "attività in fase di avvio: ragione sociale e P.IVA saranno pubblicate appena disponibili"; data documento → 22 agosto 2026. Footer: riga discreta "COA — Centrale Operativa Artigiani | Andrea Pinna | Varese (VA)" sopra il copyright
+
 ## Da completare / note
 - P1: verifica dominio su Resend per notifiche a qualsiasi indirizzo e mittente brandizzato (es. noreply@coa-varese.it)
 - P1: email di conferma automatica al cliente

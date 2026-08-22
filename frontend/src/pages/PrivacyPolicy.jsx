@@ -22,10 +22,11 @@ export default function PrivacyPolicy() {
       <main className="px-6 md:px-12 mx-auto max-w-3xl py-16">
         <p className="text-xs font-bold tracking-[0.3em] uppercase text-[#F2A93B]">Documento legale — GDPR (UE) 2016/679</p>
         <h1 className="mt-4 font-display text-4xl md:text-5xl font-black tracking-tight">Privacy Policy</h1>
-        <p className="mt-4 text-white/40 text-sm">Ultimo aggiornamento: 7 agosto 2026</p>
+        <p className="mt-4 text-white/40 text-sm">Ultimo aggiornamento: 22 agosto 2026</p>
 
         <Section title="1. Titolare del trattamento">
-          <p>Il titolare del trattamento è <strong className="text-white">COA — Centrale Operativa Artigiani</strong> (ragione sociale e partita IVA: da completare a cura del titolare), operativo in Varese e provincia.</p>
+          <p>Il titolare del trattamento è <strong className="text-white">Andrea Pinna</strong>, con attività operante con la denominazione <strong className="text-white">COA — Centrale Operativa Artigiani</strong>, con sede operativa a <strong className="text-white">Varese (VA)</strong>.</p>
+          <p>L'attività è in fase di avvio: i dati fiscali completi (ragione sociale e partita IVA) saranno pubblicati in questa sezione non appena disponibili.</p>
           <p>Contatti del titolare: email <a href="mailto:centro.artigiani@gmail.com" className="text-[#F2A93B] underline underline-offset-2">centro.artigiani@gmail.com</a> — telefono <a href="tel:+393520248313" className="text-[#F2A93B] underline underline-offset-2">+39 352 024 8313</a>.</p>
         </Section>
 
